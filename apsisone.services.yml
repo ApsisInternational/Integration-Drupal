@@ -1,0 +1,3 @@
+services:
+  apsisone_service:
+    class: Drupal\apsisone\ApsisoneService

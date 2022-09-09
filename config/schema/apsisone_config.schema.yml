@@ -1,0 +1,16 @@
+apsisone.apsisone_config.*:
+  type: config_entity
+  label: 'Apsis One Config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    type:
+      type: string
+      label: 'Entity type'
+    bundle_type:
+      type: string
+      label: 'Bundle type'

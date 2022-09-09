@@ -1,0 +1,80 @@
+apsisone.admin_settings_form:
+  path: 'admin/config/services/apsisone'
+  defaults:
+    _form: '\Drupal\apsisone\Form\AdminSettingsForm'
+    _title: 'Apsis One Settings'
+  requirements:
+    _permission: 'administer apsisone'
+
+entity.apsisone_config.collection:
+  path: 'admin/config/services/apsisone/apsisone'
+  defaults:
+    _entity_list: 'apsisone_config'
+    _title: 'Apsis One config configuration'
+  requirements:
+    _permission: 'administer apsisone'
+
+entity.apsisone_config.add_form:
+  path: 'admin/config/services/apsisone/apsisone/add'
+  defaults:
+    _entity_form: 'apsisone_config.add'
+    _title: 'Add Apsis One config'
+  requirements:
+    _permission: 'administer apsisone'
+
+entity.apsisone_config.edit_form:
+  path: 'admin/config/services/apsisone/apsisone/{apsisone_config}'
+  defaults:
+    _entity_form: 'apsisone_config.edit'
+    _title: 'Edit Apsis One config'
+  requirements:
+    _permission: 'administer apsisone'
+
+entity.apsisone_config.delete_form:
+  path: 'admin/config/services/apsisone/apsisone/{apsisone_config}/delete'
+  defaults:
+    _entity_form: 'apsisone_config.delete'
+    _title: 'Delete Apsis One config'
+  requirements:
+    _permission: 'administer apsisone'
+
+entity.segmentation.collection:
+  path: '/admin/segmentation/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the contact entity.
+    _entity_list: 'segmentation'
+    _title: 'Segmentation List'
+  requirements:
+    _permission: 'administer apsisone'
+
+apsisone.token:
+  path: 'apsisone/token'
+  defaults:
+    _controller: '\Drupal\apsisone\Controller\ApsisoneController::token'
+    _title: 'Get Oauth token'
+  requirements:
+    _permission: 'administer apsisone'
+
+apsisone.segments:
+  path: 'apsisone/segments'
+  defaults:
+    _controller: '\Drupal\apsisone\Controller\ApsisoneController::segments'
+    _title: 'List Apsis segments'
+  requirements:
+    _permission: 'administer apsisone'
+
+apsisone.cookie:
+  path: 'apsisone/cookie'
+  defaults:
+    _controller: '\Drupal\apsisone\Controller\ApsisoneController::cookie'
+    _title: 'Show Apsis one user cookie id'
+  requirements:
+    _permission: 'administer apsisone'
+
+apsisone.evaluate:
+  path: 'apsisone/evaluate'
+  defaults:
+    _controller: '\Drupal\apsisone\Controller\ApsisoneController::evaluate'
+    _title: 'Evaluate profile'
+  requirements:
+    _permission: 'administer apsisone'

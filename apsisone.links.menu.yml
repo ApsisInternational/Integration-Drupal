@@ -1,0 +1,17 @@
+apsisone.settings:
+  title: 'Apsis One'
+  parent: system.admin_config_system
+  description: 'Configure Apsis One settings.'
+  route_name: apsisone.admin_settings_form
+
+entity.apsisone_config.collection:
+  title: 'Apsis One Configuration'
+  parent: apsisone.admin_settings_form
+  description: 'Configure Apsis One config'
+  route_name: entity.apsisone_config.collection
+
+entity.segmentation.collection:
+  title: 'Segmentation: Listing'
+  route_name: entity.segmentation.collection
+  description: 'List Segmentation entities'
+  weight: 10
