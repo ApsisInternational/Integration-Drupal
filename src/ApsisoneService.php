@@ -119,7 +119,7 @@ class ApsisoneService {
       $this->setToken($response['access_token'], intval($response['expires_in']));
     }
     else {
-      drupal_set_message('Failed to refresh token', 'error');
+      \Drupal::messenger()->addMessage('Failed to refresh token', 'error');
       \Drupal::logger('apsisone')->error($response['error_message']);
     }
   }

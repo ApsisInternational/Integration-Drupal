@@ -60,7 +60,7 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
     }
     else {
       // If we didn't get a token, temporarily display in UI.
-      drupal_set_message($this->t('Failed connecting to Apsis One.'), 'error');
+      \Drupal::messenger()->addMessage('Failed connecting to Apsis One.', 'error');
       \Drupal::logger('apsisone')->error($response['error_message']);
       return $this->redirect('<front>');
     }
@@ -84,7 +84,7 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
       return ['#markup' => $output];
     }
     else {
-      drupal_set_message($this->t('Failed connecting to Apsis One.'), 'error');
+      \Drupal::messenger()->addMessage('Failed connecting to Apsis One.', 'error');
       \Drupal::logger('apsisone')->error($response['error_message']);
       return $this->redirect('<front>');
     }
@@ -100,7 +100,7 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
     $segment = \Drupal::request()->get('segment');
 
     if (empty($profile)) {
-      drupal_set_message($this->t('Missing profile ID.'), 'error');
+      \Drupal::messenger()->addMessage('Missing profile ID.', 'error');
       return $this->redirect('<front>');
     }
 
@@ -116,7 +116,7 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
       return ['#markup' => $output];
     }
     else {
-      drupal_set_message($this->t('Failed connecting to Apsis One.'), 'error');
+      \Drupal::messenger()->addMessage('Failed connecting to Apsis One.', 'error');
       \Drupal::logger('apsisone')->error($response['error_message']);
       return $this->redirect('<front>');
     }
@@ -134,8 +134,8 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
       return ['#markup' => $output];
     }
     else {
-        drupal_set_message($this->t('Failed to get cookie'), 'error');
-        return FALSE;
+      \Drupal::messenger()->addMessage('Failed to get cookie', 'error');
+      return FALSE;
     }
   }
 

@@ -12,7 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Entity\EntityFormInterface;
 
-module_load_include('php', 'apsisone', 'src/ApsisoneFunctions');
+Drupal::moduleHandler()->loadInclude('apsisone', 'php', 'src/ApsisoneFunctions');
 use Drupal\apsisone\ApsisoneFunctions;
 
 function apsisone_cron() {
@@ -34,7 +34,7 @@ function apsisone_cron() {
     }
     else {
       // If we didn't get a token, temporarily display in UI.
-      drupal_set_message('Failed connecting to Apsis One.', 'error');
+      \Drupal::messenger()->addMessage('Failed connecting to Apsis One.', 'error');
       \Drupal::logger('apsisone')->error('<pre>' . print_r($response, TRUE) . '</pre>');
     }
   }
@@ -204,7 +204,7 @@ function apsisone_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     if (isset($bundles[$current_content_type])) {
       $enabled_fields = ApsisoneFunctions::getConfigEntities('field_config');
       $enabled_paragraphs = ApsisoneFunctions::getConfigEntities('paragraph');
-      
+
       // Get enabled paragraphs actual field name in node
       $enabled_fields_paragraphs = [];
       foreach ($enabled_paragraphs as $enabled_field) {
