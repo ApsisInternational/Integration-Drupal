@@ -12,6 +12,9 @@ use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\Entity\Segmentation;
 
+/**
+ * @group apsisone
+ */
 class SegmentationTest extends UnitTestCase {
   public function setUp() {
     parent::setUp();

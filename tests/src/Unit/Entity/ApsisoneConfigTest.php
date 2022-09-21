@@ -5,6 +5,9 @@ namespace Drupal\Tests\apsisone\Unit\Entity;
 use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\Entity\ApsisoneConfig;
 
+/**
+ * @group apsisone
+ */
 class ApsisoneConfigTest extends UnitTestCase {
   public function testConstruction()
   {

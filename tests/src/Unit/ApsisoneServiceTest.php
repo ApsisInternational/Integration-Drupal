@@ -8,6 +8,9 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\ApsisoneService;
 use GuzzleHttp\Psr7\Response;
 
+/**
+ * @group apsisone
+ */
 class ApsisoneServiceTest extends UnitTestCase {
   protected $container;
 

@@ -22,6 +22,9 @@ use Drupal\apsisone\ApsisoneService;
 use Drupal\apsisone\ApsisoneFunctions;
 use GuzzleHttp\Psr7\Response;
 
+/**
+ * @group apsisone
+ */
 class ApsisoneFunctionsTest extends UnitTestCase {
   protected $container;
 

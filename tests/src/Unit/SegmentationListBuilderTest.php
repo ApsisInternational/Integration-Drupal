@@ -11,6 +11,9 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\SegmentationListBuilder;
 
+/**
+* @group apsisone
+*/
 class SegmentationListBuilderTest extends UnitTestCase {
   /**
    * @var \Drupal\apsisone\SegmentationListBuilder
