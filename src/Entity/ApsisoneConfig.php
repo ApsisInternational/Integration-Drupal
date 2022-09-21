@@ -40,7 +40,8 @@ use Drupal\apsisone\ApsisoneConfigInterface;
  *   links = {
  *     "collection" = "/admin/config/services/apsisone/apsisone",
  *     "edit-form" = "/admin/config/services/apsisone/apsisone/{apsisone}",
- *     "delete-form" = "/admin/config/services/apsisone/apsisone/{apsisone}/delete",
+ *     "delete-form" =
+ *   "/admin/config/services/apsisone/apsisone/{apsisone}/delete",
  *   }
  * )
  */
@@ -93,4 +94,5 @@ class ApsisoneConfig extends ConfigEntityBase implements ApsisoneConfigInterface
   public function getBundleType() {
     return $this->bundle_type;
   }
+
 }

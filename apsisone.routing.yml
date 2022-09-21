@@ -41,7 +41,7 @@ entity.apsisone_config.delete_form:
 entity.segmentation.collection:
   path: '/admin/segmentation/list'
   defaults:
-  # Calls the list controller, defined in the annotation of the contact entity.
+    # Calls the list controller, defined in the annotation of the contact entity.
     _entity_list: 'segmentation'
     _title: 'Segmentation List'
   requirements:

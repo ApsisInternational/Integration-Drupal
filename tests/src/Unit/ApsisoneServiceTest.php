@@ -12,6 +12,7 @@ use GuzzleHttp\Psr7\Response;
  * @group apsisone
  */
 class ApsisoneServiceTest extends UnitTestCase {
+
   protected $container;
 
   /**
@@ -51,18 +52,18 @@ class ApsisoneServiceTest extends UnitTestCase {
     \Drupal::setContainer($this->container);
 
     $states = [
-      'apsisone_token' => null,
+      'apsisone_token' => NULL,
       'apsisone_token_renewal' => 0,
     ];
 
     $this->state = $this->createMock(StateInterface::class);
     $this->state->method('get')->willReturnCallback(
-      function($key, $default = null) use (&$states) {
+      function ($key, $default = NULL) use (&$states) {
         return $states[$key] ?? $default;
       }
     );
     $this->state->method('set')->willReturnCallback(
-      function($key, $value) use (&$states) {
+      function ($key, $value) use (&$states) {
         $states[$key] = $value;
       }
     );
@@ -78,7 +79,7 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->mockHandler->append(
       new Response(200, [], json_encode([
         'access_token' => 'asdf',
-        'expires_in' => 'qwer'
+        'expires_in' => 'qwer',
       ])),
     );
 
@@ -88,7 +89,7 @@ class ApsisoneServiceTest extends UnitTestCase {
   }
 
   public function testSetToken() {
-    $this->apsisoneService->setToken('asdf', 60*60*24);
+    $this->apsisoneService->setToken('asdf', 60 * 60 * 24);
     $this->assertEquals('asdf', $this->state->get('apsisone_token'));
   }
 
@@ -96,7 +97,7 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->mockHandler->append(
       new Response(200, [], json_encode([
         'access_token' => 'asdf',
-        'expires_in' => 'qwer'
+        'expires_in' => 'qwer',
       ])),
     );
     $this->mockHandler->append(
@@ -114,7 +115,7 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->mockHandler->append(
       new Response(200, [], json_encode([
         'access_token' => 'asdf',
-        'expires_in' => 'qwer'
+        'expires_in' => 'qwer',
       ])),
     );
     $this->mockHandler->append(
@@ -129,8 +130,9 @@ class ApsisoneServiceTest extends UnitTestCase {
   }
 
   public function testGetApsisOneCookie() {
-    $this->assertEquals(false, $this->apsisoneService->getApsisOneCookie());
+    $this->assertEquals(FALSE, $this->apsisoneService->getApsisOneCookie());
     $_COOKIE['Ely_vID'] = 'asdf';
     $this->assertEquals('asdf', $this->apsisoneService->getApsisOneCookie());
   }
+
 }

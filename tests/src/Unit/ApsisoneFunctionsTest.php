@@ -26,6 +26,7 @@ use GuzzleHttp\Psr7\Response;
  * @group apsisone
  */
 class ApsisoneFunctionsTest extends UnitTestCase {
+
   protected $container;
 
   /**
@@ -79,7 +80,9 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     $container->set('entity_type.repository', $entityTypeRepository);
 
     $this->storage = $this->createMock(EntityStorageInterface::class);
-    $entityTypeManager->expects($this->any())->method('getStorage')->willReturn($this->storage);
+    $entityTypeManager->expects($this->any())
+      ->method('getStorage')
+      ->willReturn($this->storage);
     $container->set('entity_type.manager', $entityTypeManager);
 
     $createdFieldDefinition = $this->createMock(FieldDefinitionInterface::class);
@@ -87,9 +90,11 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     $createdFieldItemList = $this->createMock(FieldItemListInterface::class);
 
     $fieldTypePluginManager = $this->createMock(FieldTypePluginManagerInterface::class);
-    $fieldTypePluginManager->method('getDefaultStorageSettings')->willReturn([]);
+    $fieldTypePluginManager->method('getDefaultStorageSettings')
+      ->willReturn([]);
     $fieldTypePluginManager->method('getDefaultFieldSettings')->willReturn([]);
-    $fieldTypePluginManager->method('createFieldItemList')->willReturn($createdFieldItemList);
+    $fieldTypePluginManager->method('createFieldItemList')
+      ->willReturn($createdFieldItemList);
     $container->set('plugin.manager.field.field_type', $fieldTypePluginManager);
 
     $entityFieldManager = $this->createMock(EntityFieldManager::class);
@@ -99,18 +104,18 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     $container->set('entity_field.manager', $entityFieldManager);
 
     $states = [
-      'apsisone_token' => null,
+      'apsisone_token' => NULL,
       'apsisone_token_renewal' => 0,
     ];
 
     $this->state = $this->createMock(StateInterface::class);
     $this->state->method('get')->willReturnCallback(
-      function($key, $default = null) use (&$states) {
+      function ($key, $default = NULL) use (&$states) {
         return $states[$key] ?? $default;
       }
     );
     $this->state->method('set')->willReturnCallback(
-      function($key, $value) use (&$states) {
+      function ($key, $value) use (&$states) {
         $states[$key] = $value;
       }
     );
@@ -139,9 +144,16 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     ], 'apsisone_config');
 
     $this->storage->method('getQuery')->willReturn($query);
-    $this->storage->method('loadMultiple')->willReturn([$config, $config2, $config3]);
+    $this->storage->method('loadMultiple')->willReturn([
+      $config,
+      $config2,
+      $config3,
+    ]);
 
-    $this->assertEquals(['field_example_1', 'field_example_2'], ApsisoneFunctions::getConfigEntities('field_config'));
+    $this->assertEquals([
+      'field_example_1',
+      'field_example_2',
+    ], ApsisoneFunctions::getConfigEntities('field_config'));
   }
 
   public function testGetExistingSegments() {
@@ -161,7 +173,7 @@ class ApsisoneFunctionsTest extends UnitTestCase {
       'entity_type' => 'node',
       'type' => 'field',
       'segmented_field' => 'field_example_3',
-      'segmented_field_match' => 'any'
+      'segmented_field_match' => 'any',
     ];
 
     $segmentation = new Segmentation([], 'segmentation');
@@ -177,7 +189,10 @@ class ApsisoneFunctionsTest extends UnitTestCase {
 
     $existing_segments = ApsisoneFunctions::getExistingSegments($values['entity_id'], $values['entity_type'], $values['type']);
 
-    $this->assertEquals(['existing' => $segments, 'field_match' => $values['segmented_field_match']], $existing_segments);
+    $this->assertEquals([
+      'existing' => $segments,
+      'field_match' => $values['segmented_field_match'],
+    ], $existing_segments);
   }
 
   public function testProfileBelongsToSegment() {
@@ -193,15 +208,15 @@ class ApsisoneFunctionsTest extends UnitTestCase {
 
     // Preparing segments - not belonging to segments
     $segments_response_false = [
-      'usercreated.segments.asdf' => false,
-      'usercreated.segments.qwer' => false,
-      'usercreated.segments.zxcv' => false,
+      'usercreated.segments.asdf' => FALSE,
+      'usercreated.segments.qwer' => FALSE,
+      'usercreated.segments.zxcv' => FALSE,
     ];
 
     $this->mockHandler->append(
       new Response(200, [], json_encode([
         'access_token' => 'asdf',
-        'expires_in' => 'qwer'
+        'expires_in' => 'qwer',
       ])),
     );
     $this->mockHandler->append(
@@ -210,18 +225,18 @@ class ApsisoneFunctionsTest extends UnitTestCase {
       ])),
     );
 
-    $this->assertEquals(false, ApsisoneFunctions::profileBelongsToSegment($existing_segmentation, $this->apsisoneService, 'asdf'));
+    $this->assertEquals(FALSE, ApsisoneFunctions::profileBelongsToSegment($existing_segmentation, $this->apsisoneService, 'asdf'));
 
     // Preparing segments - belonging to 1 segment
     $segments_response_true = [
-      'usercreated.segments.asdf' => false,
-      'usercreated.segments.qwer' => true,
-      'usercreated.segments.zxcv' => false,
+      'usercreated.segments.asdf' => FALSE,
+      'usercreated.segments.qwer' => TRUE,
+      'usercreated.segments.zxcv' => FALSE,
     ];
     $this->mockHandler->append(
       new Response(200, [], json_encode([
         'access_token' => 'asdf',
-        'expires_in' => 'qwer'
+        'expires_in' => 'qwer',
       ])),
     );
     $this->mockHandler->append(
@@ -230,6 +245,7 @@ class ApsisoneFunctionsTest extends UnitTestCase {
       ])),
     );
 
-    $this->assertEquals(true, ApsisoneFunctions::profileBelongsToSegment($existing_segmentation, $this->apsisoneService, 'asdf'));
+    $this->assertEquals(TRUE, ApsisoneFunctions::profileBelongsToSegment($existing_segmentation, $this->apsisoneService, 'asdf'));
   }
+
 }

@@ -16,6 +16,7 @@ use Drupal\apsisone\Entity\Segmentation;
  * @group apsisone
  */
 class SegmentationTest extends UnitTestCase {
+
   public function setUp() {
     parent::setUp();
 
@@ -34,9 +35,11 @@ class SegmentationTest extends UnitTestCase {
     $createdFieldItemList = $this->createMock(FieldItemListInterface::class);
 
     $fieldTypePluginManager = $this->createMock(FieldTypePluginManagerInterface::class);
-    $fieldTypePluginManager->method('getDefaultStorageSettings')->willReturn([]);
+    $fieldTypePluginManager->method('getDefaultStorageSettings')
+      ->willReturn([]);
     $fieldTypePluginManager->method('getDefaultFieldSettings')->willReturn([]);
-    $fieldTypePluginManager->method('createFieldItemList')->willReturn($createdFieldItemList);
+    $fieldTypePluginManager->method('createFieldItemList')
+      ->willReturn($createdFieldItemList);
     $container->set('plugin.manager.field.field_type', $fieldTypePluginManager);
 
     $entityFieldManager = $this->createMock(EntityFieldManager::class);
@@ -46,18 +49,17 @@ class SegmentationTest extends UnitTestCase {
     $container->set('entity_field.manager', $entityFieldManager);
   }
 
-  public function testConstruction()
-  {
+  public function testConstruction() {
     $segmentation = new Segmentation([], 'segmentation');
     $this->assertNull($segmentation->getCreatedTime());
   }
 
-  public function testBaseFieldDefinitions()
-  {
+  public function testBaseFieldDefinitions() {
     $entity_type = $this->createMock(EntityTypeInterface::class);
     $fields = Segmentation::baseFieldDefinitions($entity_type);
     $this->assertNotNull($fields);
   }
+
 }
 
 namespace Drupal\apsisone\Entity;
@@ -65,5 +67,5 @@ namespace Drupal\apsisone\Entity;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 function t($string, array $args = [], array $options = []) {
-    return new TranslatableMarkup($string, $args, $options);
+  return new TranslatableMarkup($string, $args, $options);
 }

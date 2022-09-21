@@ -60,7 +60,8 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
     }
     else {
       // If we didn't get a token, temporarily display in UI.
-      \Drupal::messenger()->addMessage('Failed connecting to Apsis One.', 'error');
+      \Drupal::messenger()
+        ->addMessage('Failed connecting to Apsis One.', 'error');
       \Drupal::logger('apsisone')->error($response['error_message']);
       return $this->redirect('<front>');
     }
@@ -84,7 +85,8 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
       return ['#markup' => $output];
     }
     else {
-      \Drupal::messenger()->addMessage('Failed connecting to Apsis One.', 'error');
+      \Drupal::messenger()
+        ->addMessage('Failed connecting to Apsis One.', 'error');
       \Drupal::logger('apsisone')->error($response['error_message']);
       return $this->redirect('<front>');
     }
@@ -116,7 +118,8 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
       return ['#markup' => $output];
     }
     else {
-      \Drupal::messenger()->addMessage('Failed connecting to Apsis One.', 'error');
+      \Drupal::messenger()
+        ->addMessage('Failed connecting to Apsis One.', 'error');
       \Drupal::logger('apsisone')->error($response['error_message']);
       return $this->redirect('<front>');
     }

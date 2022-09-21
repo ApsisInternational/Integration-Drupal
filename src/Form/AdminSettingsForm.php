@@ -41,32 +41,32 @@ class AdminSettingsForm extends ConfigFormBase {
 
     $config = $this->config('apsisone.settings');
 
-    $form['apsisone_settings'] = array(
+    $form['apsisone_settings'] = [
       '#type' => 'details',
       '#title' => $this->t('Apsis One settings'),
       '#description' => $this->t('Fill in the form below. You will need your Client ID and Client secret from Apsis One.'),
       '#open' => TRUE,
-    );
+    ];
 
-    $form['apsisone_settings']['client_id'] = array(
+    $form['apsisone_settings']['client_id'] = [
       '#title' => $this->t('Client ID'),
       '#type' => 'textfield',
       '#default_value' => $config->get('client_id'),
       '#size' => 50,
       '#maxlength' => 50,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['apsisone_settings']['client_secret'] = array(
+    $form['apsisone_settings']['client_secret'] = [
       '#title' => $this->t('Client secret'),
       '#type' => 'textfield',
       '#default_value' => $config->get('client_secret'),
       '#size' => 50,
       '#maxlength' => 128,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['apsisone_settings']['view_mode'] = array(
+    $form['apsisone_settings']['view_mode'] = [
       '#title' => $this->t('Apsis One Segmentation view mode'),
       '#type' => 'radios',
       '#default_value' => $config->get('view_mode'),
@@ -75,16 +75,16 @@ class AdminSettingsForm extends ConfigFormBase {
       '#size' => 50,
       '#maxlength' => 128,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['apsisone_settings']['cache_enabled'] = array(
+    $form['apsisone_settings']['cache_enabled'] = [
       '#title' => $this->t('Use cache'),
       '#type' => 'checkbox',
       '#default_value' => $config->get('cache_enabled'),
       '#description' => $this->t('Use caching for nodes that has segmented content'),
       '#suffix' => '<hr /><p><a href="/admin/config/services/apsisone/apsisone" class="button">GOTO Apsis One config</a></p>',
-    );
-    
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -107,4 +107,5 @@ class AdminSettingsForm extends ConfigFormBase {
     $apsis = new \Drupal\apsisone\ApsisoneService;
     $apsis->refreshToken();
   }
+
 }

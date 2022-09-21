@@ -11,7 +11,9 @@ class ApsisoneFunctions {
    * Returns apsisone enabled entities based on type
    */
   public static function getConfigEntities($type) {
-    $apsis_config_entities = \Drupal::entityTypeManager()->getStorage('apsisone_config')->loadMultiple();
+    $apsis_config_entities = \Drupal::entityTypeManager()
+      ->getStorage('apsisone_config')
+      ->loadMultiple();
 
     $enabled = [];
     foreach ($apsis_config_entities as $entity) {
@@ -32,16 +34,31 @@ class ApsisoneFunctions {
     $existing_segment = 0;
     $existing_segments = [];
     $segment_field_match = 'any';
-    if ( !empty($entity_id) ) {
+    if (!empty($entity_id)) {
 
       if ($segment_type == 'field') {
-        $existing_segmentation = \Drupal::entityTypeManager()->getStorage('segmentation')->loadByProperties(['entity_id' => $entity_id, 'entity_type' => $entity_type, 'segmented_field' => $segmented_field, 'type' => $segment_type]);
+        $existing_segmentation = \Drupal::entityTypeManager()
+          ->getStorage('segmentation')
+          ->loadByProperties([
+            'entity_id' => $entity_id,
+            'entity_type' => $entity_type,
+            'segmented_field' => $segmented_field,
+            'type' => $segment_type,
+          ]);
       }
-      else if ($segment_type == 'block') {
-        $existing_segmentation = \Drupal::entityTypeManager()->getStorage('segmentation')->loadByProperties(['entity_id' => $entity_id, 'entity_type' => $segment_type, 'type' => $segment_type]);
+      else {
+        if ($segment_type == 'block') {
+          $existing_segmentation = \Drupal::entityTypeManager()
+            ->getStorage('segmentation')
+            ->loadByProperties([
+              'entity_id' => $entity_id,
+              'entity_type' => $segment_type,
+              'type' => $segment_type,
+            ]);
+        }
       }
 
-      if ( !empty($existing_segmentation) ) {
+      if (!empty($existing_segmentation)) {
         $segmentation = array_shift($existing_segmentation);
         $existing_segment = unserialize($segmentation->segment->value);
         $segment_field_match = $segmentation->segmented_field_match->value;
@@ -54,7 +71,10 @@ class ApsisoneFunctions {
       }
     }
 
-    return ['existing' => $existing_segments, 'field_match' => $segment_field_match];
+    return [
+      'existing' => $existing_segments,
+      'field_match' => $segment_field_match,
+    ];
   }
 
   /**
@@ -64,7 +84,7 @@ class ApsisoneFunctions {
 
     $segment_hit = FALSE;
     $existing_segment = FALSE;
-    if ( !empty($existing_segmentation) && isset($existing_segmentation->segment->value) ) {
+    if (!empty($existing_segmentation) && isset($existing_segmentation->segment->value)) {
       $existing_segment = unserialize($existing_segmentation->segment->value);
     }
 

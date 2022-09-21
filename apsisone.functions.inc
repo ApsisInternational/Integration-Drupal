@@ -2,7 +2,7 @@
 
 function _apsisone_get_supported_types() {
   $types = [
-//    'node' => 'Node',
+    //    'node' => 'Node',
     'block' => 'Block',
     'field_config' => 'Field',
   ];
@@ -14,19 +14,24 @@ function _apsisone_get_supported_types() {
 
 
 function _apsisone_create_segment($entity_id, $entity_type, $type, $segment, $segmented_field = '', $segmented_field_match = '', $segmented_field_delta = '') {
-  $values = array(
+  $values = [
     'entity_id' => $entity_id,
     'entity_type' => $entity_type,
     'type' => $type,
     'segment' => $segment,
     'segmented_field' => $segmented_field,
     'segmented_field_delta' => $segmented_field_delta,
-    'segmented_field_match' => $segmented_field_match
-  );
+    'segmented_field_match' => $segmented_field_match,
+  ];
 
   // If segment already exists update it instead of creating a duplicate
-  $already_existing_segmentation = \Drupal::entityTypeManager()->getStorage('segmentation')->loadByProperties(['entity_id' => $values['entity_id'], 'segmented_field' => $values['segmented_field']]);
-  if ( !empty($already_existing_segmentation) ) {
+  $already_existing_segmentation = \Drupal::entityTypeManager()
+    ->getStorage('segmentation')
+    ->loadByProperties([
+      'entity_id' => $values['entity_id'],
+      'segmented_field' => $values['segmented_field'],
+    ]);
+  if (!empty($already_existing_segmentation)) {
     $segmentation = array_shift($already_existing_segmentation);
     $segmentation->segment->value = $segment;
     $segmentation->segmented_field_match = $segmented_field_match;
@@ -45,7 +50,9 @@ function _apsisone_create_segment($entity_id, $entity_type, $type, $segment, $se
  * Returns apsisone enabled entities based on type
  */
 function _apsisone_get_config_entities($type) {
-  $apsis_config_entities = \Drupal::entityTypeManager()->getStorage('apsisone_config')->loadMultiple();
+  $apsis_config_entities = \Drupal::entityTypeManager()
+    ->getStorage('apsisone_config')
+    ->loadMultiple();
 
   $enabled = [];
   foreach ($apsis_config_entities as $entity) {
@@ -67,7 +74,9 @@ function _apsisone_get_block_content_info($block_id) {
   $uuid = str_replace('block_content:', '', $block_config->getPluginId());
 
   // Get the block content
-  $block_content = \Drupal::entityTypeManager()->getStorage('block_content')->loadByProperties(['uuid' => $uuid]);
+  $block_content = \Drupal::entityTypeManager()
+    ->getStorage('block_content')
+    ->loadByProperties(['uuid' => $uuid]);
   $block_content = array_shift($block_content);
 
   if (empty($block_content)) {
@@ -88,16 +97,31 @@ function _apsisone_get_existing_segments($entity_id, $entity_type, $segment_type
   $existing_segment = 0;
   $existing_segments = [];
   $segment_field_match = 'any';
-  if ( !empty($entity_id) ) {
+  if (!empty($entity_id)) {
 
     if ($segment_type == 'field') {
-      $existing_segmentation = \Drupal::entityTypeManager()->getStorage('segmentation')->loadByProperties(['entity_id' => $entity_id, 'entity_type' => $entity_type, 'segmented_field' => $segmented_field, 'type' => $segment_type]);
+      $existing_segmentation = \Drupal::entityTypeManager()
+        ->getStorage('segmentation')
+        ->loadByProperties([
+          'entity_id' => $entity_id,
+          'entity_type' => $entity_type,
+          'segmented_field' => $segmented_field,
+          'type' => $segment_type,
+        ]);
     }
-    else if ($segment_type == 'block') {
-      $existing_segmentation = \Drupal::entityTypeManager()->getStorage('segmentation')->loadByProperties(['entity_id' => $entity_id, 'entity_type' => $segment_type, 'type' => $segment_type]);
+    else {
+      if ($segment_type == 'block') {
+        $existing_segmentation = \Drupal::entityTypeManager()
+          ->getStorage('segmentation')
+          ->loadByProperties([
+            'entity_id' => $entity_id,
+            'entity_type' => $segment_type,
+            'type' => $segment_type,
+          ]);
+      }
     }
 
-    if ( !empty($existing_segmentation) ) {
+    if (!empty($existing_segmentation)) {
       $segmentation = array_shift($existing_segmentation);
       $existing_segment = unserialize($segmentation->segment->value);
       $segment_field_match = $segmentation->segmented_field_match->value;
@@ -110,14 +134,17 @@ function _apsisone_get_existing_segments($entity_id, $entity_type, $segment_type
     }
   }
 
-  return ['existing' => $existing_segments, 'field_match' => $segment_field_match];
+  return [
+    'existing' => $existing_segments,
+    'field_match' => $segment_field_match,
+  ];
 }
 
 
 function _apsisone_profile_belongs_to_segment($existing_segmentation, $apsis, $profile) {
 
   $segment_hit = FALSE;
-  if ( !empty($existing_segmentation) ) {
+  if (!empty($existing_segmentation)) {
     $segmentation = array_shift($existing_segmentation);
     $existing_segment = unserialize($segmentation->segment->value);
   }

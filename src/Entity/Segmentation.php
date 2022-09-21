@@ -43,7 +43,8 @@ use Drupal\apsisone\SegmentationInterface;
  *
  * More properties:
  *
- *  - base_table: Define the name of the table used to store the data. Make sure
+ *  - base_table: Define the name of the table used to store the data. Make
+ *   sure
  *    it is unique. The schema is automatically determined from the
  *    BaseFieldDefinitions below. The table is automatically created during
  *    installation.
@@ -55,7 +56,8 @@ use Drupal\apsisone\SegmentationInterface;
  *
  *  - links: Provide links to do standard tasks. The 'edit-form' and
  *    'delete-form' links are added to the list built by the
- *    entityListController. They will show up as action buttons in an additional
+ *    entityListController. They will show up as action buttons in an
+ *   additional
  *    column.
  *
  * @ContentEntityType(
@@ -79,7 +81,8 @@ use Drupal\apsisone\SegmentationInterface;
  *   internal = TRUE,
  * )
  *
- * The 'Segmentation' class defines methods and fields for the segmentation entity.
+ * The 'Segmentation' class defines methods and fields for the segmentation
+ *   entity.
  *
  * Being derived from the ContentEntityBase class, we can override the methods
  * we want. In our case we want to provide access to the standard fields about
@@ -87,13 +90,16 @@ use Drupal\apsisone\SegmentationInterface;
  *
  * The most important part is the definitions of the field properties for this
  * entity type. These are of the same type as fields added through the GUI, but
- * they can by changed in code. In the definition we can define if the user with
+ * they can by changed in code. In the definition we can define if the user
+ *   with
  * the rights privileges can influence the presentation (view, edit) of each
  * field.
  */
 class Segmentation extends ContentEntityBase implements SegmentationInterface {
 
-  use EntityChangedTrait; // Implements methods defined by EntityChangedInterface.
+  use EntityChangedTrait;
+
+  // Implements methods defined by EntityChangedInterface.
 
   /**
    * {@inheritdoc}
@@ -163,4 +169,5 @@ class Segmentation extends ContentEntityBase implements SegmentationInterface {
 
     return $fields;
   }
+
 }

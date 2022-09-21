@@ -4,3 +4,5 @@ package: Apsis One
 core_version_requirement: ^8.8 || ^9 || ^10
 type: module
 configure: apsisone.admin_settings_form
+dependencies:
+  - drupal:block_content

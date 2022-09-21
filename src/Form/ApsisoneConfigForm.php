@@ -28,6 +28,7 @@ class ApsisoneConfigForm extends EntityForm {
 
   /**
    * Constructs an ApsisoneConfigForm object.
+   *
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -112,47 +113,59 @@ class ApsisoneConfigForm extends EntityForm {
         }
       }
       // Get block types
-      else if ($type == 'block' && $bundles = \Drupal::entityTypeManager()->getStorage('block_content_type')->loadMultiple()) {
-        $bundle_options = [];
-        foreach ($bundles as $id => $info) {
-          $bundle_options[$id] = $info->get('label');
-        }
-      }
-      // Get supported fields
-      else if ($type == 'field_config') {
-
-        $supported_fieldtypes = [
-          'image',
-          'link',
-          'text',
-          'text_long',
-          'text_with_summary',
-          'string',
-          'string_long',
-        ];
-
-        $bundle_options = [];
-        // Go through all content types on site
-        $bundles = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
-         foreach ($bundles as $bundle => $bundle_value) {
-          $entity_type_id = 'node';
-          // Go through all fields on content type
-          foreach (\Drupal::entityManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
-            // Add supported fields to bundle options
-            if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
-              $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';
-            }
+      else {
+        if ($type == 'block' && $bundles = \Drupal::entityTypeManager()
+            ->getStorage('block_content_type')
+            ->loadMultiple()) {
+          $bundle_options = [];
+          foreach ($bundles as $id => $info) {
+            $bundle_options[$id] = $info->get('label');
           }
         }
+        // Get supported fields
+        else {
+          if ($type == 'field_config') {
 
-        $bundles_block = \Drupal::entityTypeManager()->getStorage('block_content_type')->loadMultiple();
-        foreach ($bundles_block as $bundle => $bundle_value) {
-          $entity_type_id = 'block_content';
-          // Go through all fields on content type
-          foreach (\Drupal::entityManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
-            // Add supported fields to bundle options
-            if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
-              $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';
+            $supported_fieldtypes = [
+              'image',
+              'link',
+              'text',
+              'text_long',
+              'text_with_summary',
+              'string',
+              'string_long',
+            ];
+
+            $bundle_options = [];
+            // Go through all content types on site
+            $bundles = \Drupal::entityTypeManager()
+              ->getStorage('node_type')
+              ->loadMultiple();
+            foreach ($bundles as $bundle => $bundle_value) {
+              $entity_type_id = 'node';
+              // Go through all fields on content type
+              foreach (\Drupal::entityManager()
+                         ->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+                // Add supported fields to bundle options
+                if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
+                  $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';
+                }
+              }
+            }
+
+            $bundles_block = \Drupal::entityTypeManager()
+              ->getStorage('block_content_type')
+              ->loadMultiple();
+            foreach ($bundles_block as $bundle => $bundle_value) {
+              $entity_type_id = 'block_content';
+              // Go through all fields on content type
+              foreach (\Drupal::entityManager()
+                         ->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+                // Add supported fields to bundle options
+                if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
+                  $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';
+                }
+              }
             }
           }
         }
@@ -187,7 +200,8 @@ class ApsisoneConfigForm extends EntityForm {
     /** @var \Drupal\apsisone\ApsisoneConfigInterface $entity */
     $entity = parent::buildEntity($form, $form_state);
 
-    \Drupal::logger('apsisone')->debug('<pre>' . print_r($entity->getType(), TRUE) . '</pre>');
+    \Drupal::logger('apsisone')
+      ->debug('<pre>' . print_r($entity->getType(), TRUE) . '</pre>');
 
     $bundles = _apsisone_get_supported_types();
 
@@ -213,10 +227,12 @@ class ApsisoneConfigForm extends EntityForm {
   }
 
   /**
-   * Helper function to check whether an Apsis One Config configuration entity exists.
+   * Helper function to check whether an Apsis One Config configuration entity
+   * exists.
    */
   public function exist($id) {
-    $entity = $this->entityTypeManager->getStorage('apsisone_config')->getQuery()
+    $entity = $this->entityTypeManager->getStorage('apsisone_config')
+      ->getQuery()
       ->condition('id', $id)
       ->execute();
     return (bool) $entity;

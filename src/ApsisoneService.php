@@ -35,7 +35,7 @@ class ApsisoneService {
    * Injectable factory.
    */
   public static function construct(
-    \GuzzleHttp\ClientInterface $httpClient,
+    \GuzzleHttp\ClientInterface         $httpClient,
     \Drupal\Core\Config\ImmutableConfig $config
   ) {
     $service = new static();
@@ -70,8 +70,7 @@ class ApsisoneService {
     ];
     try {
       $response = $client->post('/oauth/token', ['form_params' => $payload]);
-    }
-    catch (ClientException $e) {
+    } catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
       return ['error_message' => $response_body];
@@ -81,7 +80,7 @@ class ApsisoneService {
 
     return [
       'access_token' => $parsed_response['access_token'],
-      'expires_in' => $parsed_response['expires_in']
+      'expires_in' => $parsed_response['expires_in'],
     ];
   }
 
@@ -145,10 +144,9 @@ class ApsisoneService {
         'headers' => [
           'Accept' => 'application/json',
           'Authorization' => 'Bearer ' . $token,
-        ]
+        ],
       ]);
-    }
-    catch (ClientException $e) {
+    } catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
       return ['error_message' => $response_body];
@@ -165,7 +163,7 @@ class ApsisoneService {
     $segments_options = [];
 
     // Prepare and show the selectable segment values
-    if ( isset($segments['success']) ) {
+    if (isset($segments['success'])) {
 
       foreach ($segments['success'] as $segment) {
         $segments_options[$segment['discriminator']] = $segment['name'];
@@ -182,7 +180,7 @@ class ApsisoneService {
     $payload = [
       'segments' => [
       ],
-      'time_zone' => 'Europe/Stockholm'
+      'time_zone' => 'Europe/Stockholm',
     ];
 
     foreach ($segments as $segment) {
@@ -199,8 +197,7 @@ class ApsisoneService {
         ],
         'form_params' => $payload,
       ]);
-    }
-    catch (ClientException $e) {
+    } catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
       return ['error_message' => $response_body];
@@ -223,14 +220,14 @@ class ApsisoneService {
       'profiles' => [
         [
           'keyspace_discriminator' => $keyspace_discriminator,
-          'profile_key' => $profile
+          'profile_key' => $profile,
         ],
         [
           'keyspace_discriminator' => $keyspace_discriminator_cms,
-          'profile_key' => $profile
-        ]
+          'profile_key' => $profile,
+        ],
       ],
-      'time_zone' => 'Europe/Stockholm'
+      'time_zone' => 'Europe/Stockholm',
     ];
 
     try {
@@ -241,8 +238,7 @@ class ApsisoneService {
         ],
         'form_params' => $payload,
       ]);
-    }
-    catch (ClientException $e) {
+    } catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
 
@@ -250,7 +246,7 @@ class ApsisoneService {
         $response_body = '409 profile merge conflict. Profile: ' . $profile . ' Response: ' . $response_body;
       }
 
-      $status_codes = [409,204,410];
+      $status_codes = [409, 204, 410];
       if (in_array($response->getStatusCode(), $status_codes)) {
         setcookie("Ely_CMS_vID", $profile, time() + (10 * 365 * 24 * 60 * 60), '/');
         return 'cookieset';
@@ -261,7 +257,7 @@ class ApsisoneService {
       return ['error_message' => $response_body];
     }
 
-    $status_codes = [409,204,410];
+    $status_codes = [409, 204, 410];
     if (in_array($response->getStatusCode(), $status_codes)) {
       setcookie("Ely_CMS_vID", $profile, time() + (10 * 365 * 24 * 60 * 60), '/');
       return 'cookieset';
@@ -297,4 +293,5 @@ class ApsisoneService {
 
     return FALSE;
   }
+
 }
