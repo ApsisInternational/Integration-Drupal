@@ -2,11 +2,9 @@
 
 namespace Drupal\Tests\apsisone\Unit;
 
-use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Entity\EntityFieldManager;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -49,7 +47,10 @@ class ApsisoneFunctionsTest extends UnitTestCase {
    */
   protected $storage;
 
-  public function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp(): void {
     parent::setUp();
 
     $this->mockHandler = new \GuzzleHttp\Handler\MockHandler();

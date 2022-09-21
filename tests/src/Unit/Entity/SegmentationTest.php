@@ -17,7 +17,10 @@ use Drupal\apsisone\Entity\Segmentation;
  */
 class SegmentationTest extends UnitTestCase {
 
-  public function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp(): void {
     parent::setUp();
 
     $container = new ContainerBuilder();

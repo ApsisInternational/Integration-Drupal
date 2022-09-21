@@ -26,7 +26,10 @@ class SegmentationListBuilderTest extends UnitTestCase {
    */
   protected $storage;
 
-  public function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp(): void {
     parent::setUp();
 
     $container = new ContainerBuilder();

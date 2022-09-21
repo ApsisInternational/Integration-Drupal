@@ -30,7 +30,10 @@ class ApsisoneServiceTest extends UnitTestCase {
    */
   protected $state;
 
-  public function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp(): void {
     parent::setUp();
 
     $this->mockHandler = new \GuzzleHttp\Handler\MockHandler();
