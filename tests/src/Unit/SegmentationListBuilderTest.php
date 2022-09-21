@@ -12,9 +12,10 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\SegmentationListBuilder;
 
 /**
-* @group apsisone
-*/
+ * @group apsisone
+ */
 class SegmentationListBuilderTest extends UnitTestCase {
+
   /**
    * @var \Drupal\apsisone\SegmentationListBuilder
    */
@@ -41,10 +42,10 @@ class SegmentationListBuilderTest extends UnitTestCase {
     $this->builder->setStringTranslation($this->getStringTranslationStub());
   }
 
-  public function testRender()
-  {
+  public function testRender() {
     $query = $this->createMock(QueryInterface::class);
     $query->method('sort')->willReturn($query);
+    $query->method('accessCheck')->willReturn($query);
     $query->method('execute')->willReturn([1]);
 
     $entity = $this->createMock(EntityInterface::class);
@@ -64,4 +65,5 @@ class SegmentationListBuilderTest extends UnitTestCase {
     $build = $this->builder->render();
     $this->assertFalse(empty($build['description']['#markup']));
   }
+
 }
