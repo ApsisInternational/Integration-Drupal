@@ -2,20 +2,20 @@ apsisone.admin_settings_form:
   path: 'admin/config/services/apsisone'
   defaults:
     _form: '\Drupal\apsisone\Form\AdminSettingsForm'
-    _title: 'Apsis One Settings'
+    _title: 'Apsis One'
   requirements:
     _permission: 'administer apsisone'
 
 entity.apsisone_config.collection:
-  path: 'admin/config/services/apsisone/apsisone'
+  path: 'admin/config/services/apsisone/config'
   defaults:
     _entity_list: 'apsisone_config'
-    _title: 'Apsis One config configuration'
+    _title: 'Configurations'
   requirements:
     _permission: 'administer apsisone'
 
 entity.apsisone_config.add_form:
-  path: 'admin/config/services/apsisone/apsisone/add'
+  path: 'admin/config/services/apsisone/config/add'
   defaults:
     _entity_form: 'apsisone_config.add'
     _title: 'Add Apsis One config'
@@ -23,7 +23,7 @@ entity.apsisone_config.add_form:
     _permission: 'administer apsisone'
 
 entity.apsisone_config.edit_form:
-  path: 'admin/config/services/apsisone/apsisone/{apsisone_config}'
+  path: 'admin/config/services/apsisone/config/{apsisone_config}'
   defaults:
     _entity_form: 'apsisone_config.edit'
     _title: 'Edit Apsis One config'
@@ -31,7 +31,7 @@ entity.apsisone_config.edit_form:
     _permission: 'administer apsisone'
 
 entity.apsisone_config.delete_form:
-  path: 'admin/config/services/apsisone/apsisone/{apsisone_config}/delete'
+  path: 'admin/config/services/apsisone/config/{apsisone_config}/delete'
   defaults:
     _entity_form: 'apsisone_config.delete'
     _title: 'Delete Apsis One config'

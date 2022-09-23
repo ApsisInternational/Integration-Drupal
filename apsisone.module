@@ -4,12 +4,8 @@
  * Drupal Module: Apsis One
  */
 
-use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Field\FieldItemListInterface;
+
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Entity\EntityFormInterface;
 
 Drupal::moduleHandler()
@@ -444,6 +440,10 @@ function apsisone_form_submit(array $form, FormStateInterface $form_state) {
 }
 
 
+/**
+ * @return string[]
+ * TODO: Move into a service as a static callback
+ */
 function _apsisone_get_supported_types() {
   $types = [
     //    'node' => 'Node',

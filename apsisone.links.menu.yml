@@ -5,9 +5,9 @@ apsisone.settings:
   route_name: apsisone.admin_settings_form
 
 entity.apsisone_config.collection:
-  title: 'Apsis One Configuration'
-  parent: apsisone.admin_settings_form
-  description: 'Configure Apsis One config'
+  title: 'Configurations'
+  parent: apsisone.settings
+  description: 'Configure Apsis One configurations'
   route_name: entity.apsisone_config.collection
 
 entity.segmentation.collection:

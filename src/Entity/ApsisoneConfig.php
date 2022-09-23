@@ -38,10 +38,10 @@ use Drupal\apsisone\ApsisoneConfigInterface;
  *     "status",
  *   },
  *   links = {
- *     "collection" = "/admin/config/services/apsisone/apsisone",
- *     "edit-form" = "/admin/config/services/apsisone/apsisone/{apsisone}",
+ *     "collection" = "/admin/config/services/apsisone/config",
+ *     "edit-form" = "/admin/config/services/apsisone/config/{apsisone_config}",
  *     "delete-form" =
- *   "/admin/config/services/apsisone/apsisone/{apsisone}/delete",
+ *   "/admin/config/services/apsisone/config/{apsisone_config}/delete",
  *   }
  * )
  */
@@ -74,7 +74,7 @@ class ApsisoneConfig extends ConfigEntityBase implements ApsisoneConfigInterface
   /**
    * The ApsisoneConfig bundle type.
    *
-   * A string denoting the sub type of Apsis One Configuration this is. For node
+   * A string denoting the subtype of Apsis One Configuration this is. For node
    * this would be the node type and for field it would be field config type.
    *
    * @var string

@@ -1,0 +1,9 @@
+apsisone.admin_settings_form:
+  route_name: apsisone.admin_settings_form
+  title: 'Settings'
+  base_route: apsisone.admin_settings_form
+
+entity.apsisone_config.collection:
+  route_name: entity.apsisone_config.collection
+  title: 'Configurations'
+  base_route: apsisone.admin_settings_form

@@ -9,5 +9,17 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
  */
 interface ApsisoneConfigInterface extends ConfigEntityInterface {
 
-  // Add get/set methods for your configuration properties here.
+  /**
+   * Get type of Config.
+   *
+   * @return string
+   */
+  public function getType();
+
+  /**
+   * Get subtype of Config.
+   *
+   * @return string
+   */
+  public function getBundleType();
 }

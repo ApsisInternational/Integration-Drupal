@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -55,17 +54,11 @@ class ApsisoneConfigForm extends EntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
-    $apsisone_config = $this->entity;
-
-    $options = [];
-    foreach (_apsisone_get_supported_types() as $type_id => $type_label) {
-      $options[$type_id] = $type_label;
-    }
     $form['type'] = [
       '#type' => 'select',
       '#title' => $this->t('Apsis One Configuration type'),
-      '#default_value' => $apsisone_config->getType(),
-      '#options' => $options,
+      '#default_value' => $this->entity->getType(),
+      '#options' => _apsisone_get_supported_types(),
       '#required' => TRUE,
       '#limit_validation_errors' => [['type']],
       '#submit' => ['::submitSelectType'],
@@ -87,17 +80,17 @@ class ApsisoneConfigForm extends EntityForm {
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
       '#maxlength' => 255,
-      '#default_value' => $apsisone_config->label(),
+      '#default_value' => $this->entity->label(),
       '#description' => $this->t("Label for this Apsis One Configuration."),
       '#required' => TRUE,
     ];
     $form['id'] = [
       '#type' => 'machine_name',
-      '#default_value' => $apsisone_config->id(),
+      '#default_value' => $this->entity->id(),
       '#machine_name' => [
         'exists' => [$this, 'exist'],
       ],
-      '#disabled' => !$apsisone_config->isNew(),
+      '#disabled' => !$this->entity->isNew(),
     ];
 
     // if there is no type yet, stop here.
@@ -126,6 +119,11 @@ class ApsisoneConfigForm extends EntityForm {
         else {
           if ($type == 'field_config') {
 
+            /*
+             * TODO: Service injections..
+             */
+            $entityFieldManager = \Drupal::service('entity_field.manager');
+
             $supported_fieldtypes = [
               'image',
               'link',
@@ -144,8 +142,7 @@ class ApsisoneConfigForm extends EntityForm {
             foreach ($bundles as $bundle => $bundle_value) {
               $entity_type_id = 'node';
               // Go through all fields on content type
-              foreach (\Drupal::entityManager()
-                         ->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+              foreach ($entityFieldManager->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
                 // Add supported fields to bundle options
                 if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
                   $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';
@@ -159,8 +156,7 @@ class ApsisoneConfigForm extends EntityForm {
             foreach ($bundles_block as $bundle => $bundle_value) {
               $entity_type_id = 'block_content';
               // Go through all fields on content type
-              foreach (\Drupal::entityManager()
-                         ->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+              foreach ($entityFieldManager->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
                 // Add supported fields to bundle options
                 if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
                   $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';

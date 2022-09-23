@@ -1,0 +1,6 @@
+tracking:
+  js:
+    js/tracking.js: {}
+  dependencies:
+    - core/drupalSettings
+

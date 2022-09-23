@@ -81,7 +81,6 @@ class ApsisoneFunctions {
    * Check if apsisone profile belongs to segment/s
    */
   public static function profileBelongsToSegment($existing_segmentation, $apsis, $profile) {
-
     $segment_hit = FALSE;
     $existing_segment = FALSE;
     if (!empty($existing_segmentation) && isset($existing_segmentation->segment->value)) {
