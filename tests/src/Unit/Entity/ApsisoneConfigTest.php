@@ -6,10 +6,14 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\Entity\ApsisoneConfig;
 
 /**
+ * @coversDefaultClass \Drupal\apsisone\Entity\ApsisoneConfig
  * @group apsisone
  */
 class ApsisoneConfigTest extends UnitTestCase {
 
+  /**
+   * Test for construction.
+   */
   public function testConstruction() {
     $config = new ApsisoneConfig([
       'type' => 'asdf',

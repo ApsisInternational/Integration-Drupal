@@ -4,7 +4,6 @@ namespace Drupal\apsisone;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Url;
 
 /**
  * Provides a list controller for segmentation entity.
@@ -29,7 +28,6 @@ class SegmentationListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    *
    * Building the header and content lines for the Segmentation list.
-   *
    */
   public function buildHeader() {
     $header['id'] = $this->t('Segmentation ID');
@@ -43,7 +41,7 @@ class SegmentationListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /* @var $entity \Drupal\apsisone\Entity\Segmentation */
+    /** @var \Drupal\apsisone\Entity\Segmentation $entity */
     $row['id'] = $entity->id();
     $row['entity_id'] = $entity->entity_id->value;
     $row['segment'] = $entity->segment->value;

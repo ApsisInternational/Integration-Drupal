@@ -13,6 +13,7 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\Entity\Segmentation;
 
 /**
+ * @coversDefaultClass \Drupal\apsisone\Entity\Segmentation
  * @group apsisone
  */
 class SegmentationTest extends UnitTestCase {
@@ -52,23 +53,21 @@ class SegmentationTest extends UnitTestCase {
     $container->set('entity_field.manager', $entityFieldManager);
   }
 
+  /**
+   * @covers ::getCreatedTime
+   */
   public function testConstruction() {
     $segmentation = new Segmentation([], 'segmentation');
     $this->assertNull($segmentation->getCreatedTime());
   }
 
+  /**
+   * @covers ::baseFieldDefinitions
+   */
   public function testBaseFieldDefinitions() {
     $entity_type = $this->createMock(EntityTypeInterface::class);
     $fields = Segmentation::baseFieldDefinitions($entity_type);
     $this->assertNotNull($fields);
   }
 
-}
-
-namespace Drupal\apsisone\Entity;
-
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-
-function t($string, array $args = [], array $options = []) {
-  return new TranslatableMarkup($string, $args, $options);
 }

@@ -70,7 +70,7 @@ function apsisone_block_view_alter(array &$build, \Drupal\Core\Block\BlockPlugin
       $profile = $apsis->getApsisOneCookie();
 
       // Get CMS profile
-      $profile_cms = $apsis->getApsisOneCMSCookie();
+      $profile_cms = $apsis->getApsisOneCmsCookie();
 
       if (!empty($profile) && $profile !== $profile_cms) {
         $apsis->mergeProfiles($profile);
@@ -135,7 +135,7 @@ function apsisone_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInte
       $profile = $apsis->getApsisOneCookie();
 
       // Get CMS profile
-      $profile_cms = $apsis->getApsisOneCMSCookie();
+      $profile_cms = $apsis->getApsisOneCmsCookie();
 
       if (!empty($profile) && $profile !== $profile_cms) {
         $apsis->mergeProfiles($profile);

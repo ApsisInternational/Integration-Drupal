@@ -3,9 +3,10 @@
 namespace Drupal\apsisone;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Config\ImmutableConfig;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Apsis One Service.
@@ -17,12 +18,14 @@ class ApsisoneService {
    *
    * @var \GuzzleHttp\ClientInterface
    */
-  protected $httpClient;
+  protected ClientInterface $httpClient;
 
   /**
+   * Config.
+   *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
-  protected $config;
+  protected ImmutableConfig $config;
 
   /**
    * Class constructor.
@@ -32,12 +35,19 @@ class ApsisoneService {
   }
 
   /**
-   * Injectable factory.
+   * Static constructor.
+   *
+   * @param \GuzzleHttp\ClientInterface $httpClient
+   *   Http client.
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *   Config.
+   *
+   * @return ApsisoneService
+   *   ApisonsService object.
+   *
+   * @todo Fix with a new service.
    */
-  public static function construct(
-    \GuzzleHttp\ClientInterface         $httpClient,
-    \Drupal\Core\Config\ImmutableConfig $config
-  ) {
+  public static function construct(ClientInterface $httpClient, ImmutableConfig $config) {
     $service = new static();
     $service->httpClient = $httpClient;
     $service->config = $config;
@@ -45,6 +55,12 @@ class ApsisoneService {
     return $service;
   }
 
+  /**
+   * Get config.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   Config.
+   */
   private function config() {
     if (!$this->config) {
       $this->config = \Drupal::config('apsisone.settings');
@@ -70,13 +86,13 @@ class ApsisoneService {
     ];
     try {
       $response = $client->post('/oauth/token', ['form_params' => $payload]);
-    } catch (ClientException $e) {
+    }
+    catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
       return ['error_message' => $response_body];
     }
     $parsed_response = Json::decode((string) $response->getBody());
-
 
     return [
       'access_token' => $parsed_response['access_token'],
@@ -84,7 +100,12 @@ class ApsisoneService {
     ];
   }
 
-
+  /**
+   * Get token.
+   *
+   * @return string
+   *   Token.
+   */
   public function getToken() {
     if (!$this->isTokenValid()) {
       $this->refreshToken();
@@ -95,25 +116,32 @@ class ApsisoneService {
     return $token;
   }
 
-
-  public function setToken($token, $expire) {
-
-    // Set token renewaltime to 1 hour before it actually expires
+  /**
+   * Set token.
+   *
+   * @param string $token
+   *   Token to set.
+   * @param int $expire
+   *   Expire time.
+   */
+  public function setToken(string $token, int $expire) {
+    // Set token renewaltime to 1 hour before it actually expires.
     $force_token_early_expire = 3600;
     $token_renewal = time() + $expire - $force_token_early_expire;
 
-    // Save token and renewal time
+    // Save token and renewal time.
     \Drupal::state()->set('apsisone_token', $token);
     \Drupal::state()->set('apsisone_token_renewal', $token_renewal);
   }
 
-
+  /**
+   * Refresh token.
+   */
   public function refreshToken() {
-
-    // Get token
+    // Get token.
     $response = $this->requestToken();
 
-    // Set token
+    // Set token.
     if (isset($response['access_token'])) {
       $this->setToken($response['access_token'], intval($response['expires_in']));
     }
@@ -123,7 +151,12 @@ class ApsisoneService {
     }
   }
 
-
+  /**
+   * Token valdation.
+   *
+   * @return bool
+   *   If token is still valid.
+   */
   public function isTokenValid() {
     $token_renewal = \Drupal::state()->get('apsisone_token_renewal');
 
@@ -134,7 +167,12 @@ class ApsisoneService {
     return FALSE;
   }
 
-
+  /**
+   * List segments.
+   *
+   * @return array
+   *   Segments.
+   */
   public function listSegments() {
     $client = $this->httpClient;
     try {
@@ -146,23 +184,30 @@ class ApsisoneService {
           'Authorization' => 'Bearer ' . $token,
         ],
       ]);
-    } catch (ClientException $e) {
+    }
+    catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
       return ['error_message' => $response_body];
     }
-    // Get the actual access token
+    // Get the actual access token.
     $parsed_response = Json::decode((string) $response->getBody());
     $segments = $parsed_response['items'];
 
     return ['success' => $segments];
   }
 
+  /**
+   * Get segments.
+   *
+   * @return array
+   *   Segments.
+   */
   public function getSegments() {
     $segments = $this->listSegments();
     $segments_options = [];
 
-    // Prepare and show the selectable segment values
+    // Prepare and show the selectable segment values.
     if (isset($segments['success'])) {
 
       foreach ($segments['success'] as $segment) {
@@ -173,13 +218,23 @@ class ApsisoneService {
     return $segments_options;
   }
 
-  public function evaluateProfile($segments, $profile) {
+  /**
+   * Evaluate Profile.
+   *
+   * @param array $segments
+   *   Segments.
+   * @param string $profile
+   *   Profile.
+   *
+   * @return array
+   *   Segments successful.
+   */
+  public function evaluateProfile(array $segments, string $profile) {
     $token = $this->getToken();
     $client = $this->httpClient;
 
     $payload = [
-      'segments' => [
-      ],
+      'segments' => [],
       'time_zone' => 'Europe/Stockholm',
     ];
 
@@ -197,19 +252,31 @@ class ApsisoneService {
         ],
         'form_params' => $payload,
       ]);
-    } catch (ClientException $e) {
+    }
+    catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
       return ['error_message' => $response_body];
     }
-    // Get the actual response
+    // Get the actual response.
     $parsed_response = Json::decode((string) $response->getBody());
     $segments = $parsed_response['matches'];
 
     return ['success' => $segments];
   }
 
-  public function mergeProfiles($profile) {
+  /**
+   * Merge Profiles.
+   *
+   * @param string $profile
+   *   Profile.
+   *
+   * @return bool|string|string[]
+   *   Return value.
+   *
+   * @todo Add better descriptions. And better return type.
+   */
+  public function mergeProfiles(string $profile) {
     $token = $this->getToken();
     $client = $this->httpClient;
 
@@ -238,7 +305,8 @@ class ApsisoneService {
         ],
         'form_params' => $payload,
       ]);
-    } catch (ClientException $e) {
+    }
+    catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
 
@@ -251,9 +319,7 @@ class ApsisoneService {
         setcookie("Ely_CMS_vID", $profile, time() + (10 * 365 * 24 * 60 * 60), '/');
         return 'cookieset';
       }
-
       \Drupal::logger('apsisone')->error($response_body);
-
       return ['error_message' => $response_body];
     }
 
@@ -262,10 +328,8 @@ class ApsisoneService {
       setcookie("Ely_CMS_vID", $profile, time() + (10 * 365 * 24 * 60 * 60), '/');
       return 'cookieset';
     }
-
     return TRUE;
   }
-
 
   /**
    * Get user id from cookie.
@@ -276,21 +340,18 @@ class ApsisoneService {
     if (!empty($cookie)) {
       return $cookie;
     }
-
     return FALSE;
   }
-
 
   /**
    * Get user id from CMS cookie.
    */
-  public function getApsisOneCMSCookie() {
+  public function getApsisOneCmsCookie() {
     $cookie = @$_COOKIE['Ely_CMS_vID'];
 
     if (!empty($cookie)) {
       return $cookie;
     }
-
     return FALSE;
   }
 

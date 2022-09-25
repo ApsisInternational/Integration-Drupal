@@ -6,27 +6,42 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\State\StateInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\ApsisoneService;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 
 /**
+ * @covers \Drupal\apsisone\ApsisoneService
  * @group apsisone
  */
 class ApsisoneServiceTest extends UnitTestCase {
 
+  /**
+   * Container Builder.
+   *
+   * @var \Drupal\Core\DependencyInjection\ContainerBuilder
+   */
   protected $container;
 
   /**
+   * Apsisone Service.
+   *
    * @var \Drupal\apsisone\ApsisoneService
    */
   protected $apsisoneService;
 
   /**
+   * Mock Handler .
+   *
    * @var \GuzzleHttp\Handler\MockHandler
    */
   protected $mockHandler;
 
   /**
-   * \Drupal\Core\State\StateInterface
+   * State Interface.
+   *
+   * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
 
@@ -36,9 +51,9 @@ class ApsisoneServiceTest extends UnitTestCase {
   public function setUp(): void {
     parent::setUp();
 
-    $this->mockHandler = new \GuzzleHttp\Handler\MockHandler();
-    $handlerStack = \GuzzleHttp\HandlerStack::create($this->mockHandler);
-    $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+    $this->mockHandler = new MockHandler();
+    $handlerStack = HandlerStack::create($this->mockHandler);
+    $httpClient = new Client(['handler' => $handlerStack]);
 
     $configFactory = $this->getConfigFactoryStub([
       'apsisone.settings' => [
@@ -46,8 +61,8 @@ class ApsisoneServiceTest extends UnitTestCase {
         'client_secret' => '4321',
       ],
     ]);
-    $config = $configFactory->get('apsisone.settings');
     // @todo Replace with container mock?
+    $config = $configFactory->get('apsisone.settings');
 
     $this->apsisoneService = ApsisoneService::construct($httpClient, $config);
 
@@ -73,11 +88,17 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->container->set('state', $this->state);
   }
 
+  /**
+   * @covers ::getApsisOneCookie
+   */
   public function testGetCookie() {
     $cookie = $this->apsisoneService->getApsisOneCookie();
     $this->assertEquals(FALSE, $cookie);
   }
 
+  /**
+   * @covers ::getToken
+   */
   public function testGetToken() {
     $this->mockHandler->append(
       new Response(200, [], json_encode([
@@ -91,11 +112,17 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->assertEquals('asdf', $token);
   }
 
+  /**
+   * @covers ::setToken
+   */
   public function testSetToken() {
     $this->apsisoneService->setToken('asdf', 60 * 60 * 24);
     $this->assertEquals('asdf', $this->state->get('apsisone_token'));
   }
 
+  /**
+   * @covers ::listSegments
+   */
   public function testListSegments() {
     $this->mockHandler->append(
       new Response(200, [], json_encode([
@@ -114,6 +141,9 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->assertEquals(['success' => ['asdf']], $segments);
   }
 
+  /**
+   * @covers ::evaluateProfile
+   */
   public function testEvaluateProfile() {
     $this->mockHandler->append(
       new Response(200, [], json_encode([
@@ -132,6 +162,9 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->assertEquals(['success' => ['asdf']], $profile);
   }
 
+  /**
+   * @covers ::getApsisOneCookie
+   */
   public function testGetApsisOneCookie() {
     $this->assertEquals(FALSE, $this->apsisoneService->getApsisOneCookie());
     $_COOKIE['Ely_vID'] = 'asdf';

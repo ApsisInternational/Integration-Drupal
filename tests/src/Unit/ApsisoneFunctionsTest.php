@@ -18,31 +18,48 @@ use Drupal\apsisone\Entity\ApsisoneConfig;
 use Drupal\apsisone\Entity\Segmentation;
 use Drupal\apsisone\ApsisoneService;
 use Drupal\apsisone\ApsisoneFunctions;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 
 /**
+ * @covers \Drupal\apsisone\ApsisoneFunctions
  * @group apsisone
  */
 class ApsisoneFunctionsTest extends UnitTestCase {
 
+  /**
+   * Container builder.
+   *
+   * @var \Drupal\Core\DependencyInjection\ContainerBuilder
+   */
   protected $container;
 
   /**
+   * Apsisone Service.
+   *
    * @var \Drupal\apsisone\ApsisoneService
    */
   protected $apsisoneService;
 
   /**
+   * Mock handler.
+   *
    * @var \GuzzleHttp\Handler\MockHandler
    */
   protected $mockHandler;
 
   /**
-   * \Drupal\Core\State\StateInterface
+   * State Interface.
+   *
+   * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
 
   /**
+   * Entity Storage.
+   *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $storage;
@@ -53,9 +70,9 @@ class ApsisoneFunctionsTest extends UnitTestCase {
   public function setUp(): void {
     parent::setUp();
 
-    $this->mockHandler = new \GuzzleHttp\Handler\MockHandler();
-    $handlerStack = \GuzzleHttp\HandlerStack::create($this->mockHandler);
-    $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+    $this->mockHandler = new MockHandler();
+    $handlerStack = HandlerStack::create($this->mockHandler);
+    $httpClient = new Client(['handler' => $handlerStack]);
 
     $configFactory = $this->getConfigFactoryStub([
       'apsisone.settings' => [
@@ -64,8 +81,10 @@ class ApsisoneFunctionsTest extends UnitTestCase {
       ],
     ]);
     $config = $configFactory->get('apsisone.settings');
-    // @todo Replace with container mock?
-
+    /*
+     * @todo Replace with container mock?
+     */
+    $this->apsisoneService = new ApsisoneService();
     $this->apsisoneService = ApsisoneService::construct($httpClient, $config);
 
     $container = new ContainerBuilder();
@@ -124,6 +143,9 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     $container->set('state', $this->state);
   }
 
+  /**
+   * @covers ::getConfigEntities
+   */
   public function testGetConfigEntities() {
     $query = $this->createMock(QueryInterface::class);
     $query->method('sort')->willReturn($query);
@@ -157,6 +179,9 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     ], ApsisoneFunctions::getConfigEntities('field_config'));
   }
 
+  /**
+   * @covers ::getExistingSegments
+   */
   public function testGetExistingSegments() {
     $query = $this->createMock(QueryInterface::class);
     $query->method('sort')->willReturn($query);
@@ -196,6 +221,9 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     ], $existing_segments);
   }
 
+  /**
+   * @covers ::profileBelongsToSegment
+   */
   public function testProfileBelongsToSegment() {
     $segments = [
       'usercreated.segments.asdf' => 'usercreated.segments.asdf',
@@ -207,7 +235,7 @@ class ApsisoneFunctionsTest extends UnitTestCase {
     $existing_segmentation->segment = (object) ['value' => serialize($segments)];
     $existing_segmentation->segmented_field_match = (object) ['value' => 'any'];
 
-    // Preparing segments - not belonging to segments
+    // Preparing segments - not belonging to segments.
     $segments_response_false = [
       'usercreated.segments.asdf' => FALSE,
       'usercreated.segments.qwer' => FALSE,
@@ -228,7 +256,7 @@ class ApsisoneFunctionsTest extends UnitTestCase {
 
     $this->assertEquals(FALSE, ApsisoneFunctions::profileBelongsToSegment($existing_segmentation, $this->apsisoneService, 'asdf'));
 
-    // Preparing segments - belonging to 1 segment
+    // Preparing segments - belonging to 1 segment.
     $segments_response_true = [
       'usercreated.segments.asdf' => FALSE,
       'usercreated.segments.qwer' => TRUE,

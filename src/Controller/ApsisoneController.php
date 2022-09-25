@@ -7,10 +7,9 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\apsisone\ApsisoneService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * Class ApsisoneController.
+ * ApsisoneController for different debug outputs.
  *
  * @package Drupal\apsisone\Controller
  */
@@ -141,6 +140,5 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
       return FALSE;
     }
   }
-
 
 }

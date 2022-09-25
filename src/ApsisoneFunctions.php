@@ -8,7 +8,7 @@ namespace Drupal\apsisone;
 class ApsisoneFunctions {
 
   /**
-   * Returns apsisone enabled entities based on type
+   * Returns apsisone enabled entities based on type.
    */
   public static function getConfigEntities($type) {
     $apsis_config_entities = \Drupal::entityTypeManager()
@@ -26,11 +26,11 @@ class ApsisoneFunctions {
   }
 
   /**
-   * Get existing segments for block or node
+   * Get existing segments for block or node.
    */
   public static function getExistingSegments($entity_id, $entity_type, $segment_type, $segmented_field = '') {
 
-    // Check if we have a segment stored for this entity since before
+    // Check if we have a segment stored for this entity since before.
     $existing_segment = 0;
     $existing_segments = [];
     $segment_field_match = 'any';
@@ -78,7 +78,7 @@ class ApsisoneFunctions {
   }
 
   /**
-   * Check if apsisone profile belongs to segment/s
+   * Check if apsisone profile belongs to segment/s.
    */
   public static function profileBelongsToSegment($existing_segmentation, $apsis, $profile) {
     $segment_hit = FALSE;

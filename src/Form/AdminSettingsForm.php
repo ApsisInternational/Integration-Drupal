@@ -2,6 +2,7 @@
 
 namespace Drupal\apsisone\Form;
 
+use Drupal\apsisone\ApsisoneService;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -11,7 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
  */
 
 /**
- * Class AdminSettingsForm.
+ * Settings form for Apsisone.
  *
  * @package Drupal\apsisone\Form
  */
@@ -131,7 +132,7 @@ class AdminSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     // Refresh token after client id and client secret has been updated.
-    $apsis = new \Drupal\apsisone\ApsisoneService;
+    $apsis = new ApsisoneService();
     $apsis->refreshToken();
   }
 

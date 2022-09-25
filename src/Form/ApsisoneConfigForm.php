@@ -14,7 +14,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ApsisoneConfigForm extends EntityForm {
 
   /**
-   * @var \Drupal\apsisone\ApsisoneConfignInterface
+   * Apsis One config entity.
+   *
+   * @var \Drupal\apsisone\ApsisoneConfigInterface
    */
   protected $entity;
 
@@ -93,29 +95,30 @@ class ApsisoneConfigForm extends EntityForm {
       '#disabled' => !$this->entity->isNew(),
     ];
 
-    // if there is no type yet, stop here.
+    // If there is no type yet, stop here.
     if ($type = $this->entity->getType()) {
 
       $entity_type = $this->entityTypeManager->getDefinition($type);
 
-      // Get node types
+      // Get node types.
       if ($entity_type->hasKey('bundle') && $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type->id())) {
         $bundle_options = [];
         foreach ($bundles as $id => $info) {
           $bundle_options[$id] = $info['label'];
         }
       }
-      // Get block types
+      // Get block types.
       else {
-        if ($type == 'block' && $bundles = \Drupal::entityTypeManager()
-            ->getStorage('block_content_type')
-            ->loadMultiple()) {
+        if ($type == 'block' && $bundles =
+            \Drupal::entityTypeManager()
+              ->getStorage('block_content_type')
+              ->loadMultiple()) {
           $bundle_options = [];
           foreach ($bundles as $id => $info) {
             $bundle_options[$id] = $info->get('label');
           }
         }
-        // Get supported fields
+        // Get supported fields.
         else {
           if ($type == 'field_config') {
 
@@ -135,15 +138,15 @@ class ApsisoneConfigForm extends EntityForm {
             ];
 
             $bundle_options = [];
-            // Go through all content types on site
+            // Go through all content types on site.
             $bundles = \Drupal::entityTypeManager()
               ->getStorage('node_type')
               ->loadMultiple();
             foreach ($bundles as $bundle => $bundle_value) {
               $entity_type_id = 'node';
-              // Go through all fields on content type
+              // Go through all fields on content type.
               foreach ($entityFieldManager->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
-                // Add supported fields to bundle options
+                // Add supported fields to bundle options.
                 if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
                   $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';
                 }
@@ -155,9 +158,9 @@ class ApsisoneConfigForm extends EntityForm {
               ->loadMultiple();
             foreach ($bundles_block as $bundle => $bundle_value) {
               $entity_type_id = 'block_content';
-              // Go through all fields on content type
+              // Go through all fields on content type.
               foreach ($entityFieldManager->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
-                // Add supported fields to bundle options
+                // Add supported fields to bundle options.
                 if (!empty($field_definition->getTargetBundle()) && in_array($field_definition->getType(), $supported_fieldtypes) && !isset($bundle_options[$field_name])) {
                   $bundle_options[$field_name] = $field_definition->getLabel() . ' (' . $field_name . ')';
                 }
@@ -218,13 +221,12 @@ class ApsisoneConfigForm extends EntityForm {
       '%label' => $this->entity->label(),
     ]));
 
-    // @TODO Is this where we are missing param that generates error?
+    // @todo Is this where we are missing param that generates error?
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
   }
 
   /**
-   * Helper function to check whether an Apsis One Config configuration entity
-   * exists.
+   * Check whether an Apsis One Config configuration entity exists.
    */
   public function exist($id) {
     $entity = $this->entityTypeManager->getStorage('apsisone_config')

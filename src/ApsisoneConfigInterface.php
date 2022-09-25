@@ -13,6 +13,7 @@ interface ApsisoneConfigInterface extends ConfigEntityInterface {
    * Get type of Config.
    *
    * @return string
+   *   Type.
    */
   public function getType();
 
@@ -20,6 +21,8 @@ interface ApsisoneConfigInterface extends ConfigEntityInterface {
    * Get subtype of Config.
    *
    * @return string
+   *   Sub type.
    */
   public function getBundleType();
+
 }

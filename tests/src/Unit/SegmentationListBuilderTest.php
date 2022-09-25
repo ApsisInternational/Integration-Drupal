@@ -12,16 +12,22 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\SegmentationListBuilder;
 
 /**
+ * Testing segmentation list builder.
+ *
  * @group apsisone
  */
 class SegmentationListBuilderTest extends UnitTestCase {
 
   /**
+   * List Builder.
+   *
    * @var \Drupal\apsisone\SegmentationListBuilder
    */
   protected $builder;
 
   /**
+   * Entity Storage.
+   *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $storage;
@@ -45,6 +51,9 @@ class SegmentationListBuilderTest extends UnitTestCase {
     $this->builder->setStringTranslation($this->getStringTranslationStub());
   }
 
+  /**
+   * Test for rendering a Segmentation List.
+   */
   public function testRender() {
     $query = $this->createMock(QueryInterface::class);
     $query->method('sort')->willReturn($query);

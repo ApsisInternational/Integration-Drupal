@@ -72,8 +72,6 @@ class TrackingCodeBlock extends BlockBase implements ContainerFactoryPluginInter
       $build['#attached']['drupalSettings']['apsisone']['trackingcode'] = $tracking_code;
     }
 
-
-
     return $build;
   }
 
