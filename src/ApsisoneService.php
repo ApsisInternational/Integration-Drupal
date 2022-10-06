@@ -62,7 +62,7 @@ class ApsisoneService {
    *   Config.
    */
   private function config() {
-    if (!$this->config) {
+    if (!empty($this->config)) {
       $this->config = \Drupal::config('apsisone.settings');
     }
 
