@@ -13,33 +13,6 @@ Drupal::moduleHandler()
 
 use Drupal\apsisone\ApsisoneFunctions;
 
-function apsisone_cron() {
-
-  // Get stored token renewal time
-  $token_renewal = \Drupal::state()->get('apsisone_token_renewal');
-
-  // If no renewal time stored since before or if the token renewal time has expired
-  if (!$token_renewal || time() > $token_renewal) {
-
-    $apsis = new \Drupal\apsisone\ApsisoneService;
-
-    // Get token
-    $response = $apsis->requestToken();
-
-    // Store down the new token and renewal time
-    if (isset($response['access_token'])) {
-      $apsis->setToken($response['access_token'], intval($response['expires_in']));
-    }
-    else {
-      // If we didn't get a token, temporarily display in UI.
-      \Drupal::messenger()
-        ->addMessage('Failed connecting to Apsis One.', 'error');
-      \Drupal::logger('apsisone')
-        ->error('<pre>' . print_r($response, TRUE) . '</pre>');
-    }
-  }
-}
-
 
 function apsisone_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
 
@@ -64,7 +37,7 @@ function apsisone_block_view_alter(array &$build, \Drupal\Core\Block\BlockPlugin
       // -- Show/hide blocks depending on segment
 
       // Instansiate the Apsis One Service
-      $apsis = new \Drupal\apsisone\ApsisoneService;
+      $apsis = \Drupal::service('apsisone_service');
 
       // Get profile
       $profile = $apsis->getApsisOneCookie();
@@ -129,7 +102,7 @@ function apsisone_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInte
     if (!empty($segmentation_enabled_fields)) {
 
       // Instansiate the Apsis One Service
-      $apsis = new \Drupal\apsisone\ApsisoneService;
+      $apsis = \Drupal::service('apsisone_service');
 
       // Get profile
       $profile = $apsis->getApsisOneCookie();
@@ -231,7 +204,7 @@ function apsisone_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
       // If we have segmented fields
       if (!empty($enabled_fields)) {
-        $apsis = new \Drupal\apsisone\ApsisoneService;
+        $apsis = \Drupal::service('apsisone_service');
         $segments_options = $apsis->getSegments();
       }
 
@@ -309,7 +282,7 @@ function apsisone_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       // Check if custom block type is enabled for segmentation
       $enabled_blocks = ApsisoneFunctions::getConfigEntities('block');
       if (in_array($block_type, $enabled_blocks)) {
-        $apsis = new \Drupal\apsisone\ApsisoneService;
+        $apsis = \Drupal::service('apsisone_service');
         $segments_options = $apsis->getSegments();
 
         // Prepare and show the selectable segment values

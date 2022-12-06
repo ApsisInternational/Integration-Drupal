@@ -1,3 +1,8 @@
 services:
   apsisone_service:
     class: Drupal\apsisone\ApsisoneService
+    arguments: [ '@http_client', '@config.factory', '@logger.channel.apsisone', '@state']
+  logger.channel.apsisone:
+    parent: logger.channel_base
+    arguments: ['apsisone']
+

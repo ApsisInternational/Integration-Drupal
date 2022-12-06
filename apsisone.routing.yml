@@ -47,22 +47,6 @@ entity.segmentation.collection:
   requirements:
     _permission: 'administer apsisone'
 
-apsisone.token:
-  path: 'apsisone/token'
-  defaults:
-    _controller: '\Drupal\apsisone\Controller\ApsisoneController::token'
-    _title: 'Get Oauth token'
-  requirements:
-    _permission: 'administer apsisone'
-
-apsisone.segments:
-  path: 'apsisone/segments'
-  defaults:
-    _controller: '\Drupal\apsisone\Controller\ApsisoneController::segments'
-    _title: 'List Apsis segments'
-  requirements:
-    _permission: 'administer apsisone'
-
 apsisone.cookie:
   path: 'apsisone/cookie'
   defaults:

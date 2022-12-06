@@ -3,10 +3,11 @@
 namespace Drupal\apsisone;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Config\ImmutableConfig;
-use GuzzleHttp\Client;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\State\StateInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
+use Psr\Log\LoggerInterface;
 
 /**
  * Apsis One Service.
@@ -21,177 +22,115 @@ class ApsisoneService {
   protected ClientInterface $httpClient;
 
   /**
-   * Config.
+   * The config factory.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  protected ImmutableConfig $config;
+  protected $config;
+
+  /**
+   * Logger instance.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
 
   /**
    * Class constructor.
    */
-  public function __construct() {
-    $this->httpClient = new Client(['base_uri' => 'https://api.apsis.one']);
+  public function __construct(ClientInterface $httpClient, ConfigFactoryInterface $config_factory, LoggerInterface $logger, StateInterface $state) {
+    $this->httpClient = $httpClient;
+    $this->config = $config_factory->get('apsisone.settings');
+    $this->logger = $logger;
+    $this->state = $state;
   }
 
-  /**
-   * Static constructor.
-   *
-   * @param \GuzzleHttp\ClientInterface $httpClient
-   *   Http client.
-   * @param \Drupal\Core\Config\ImmutableConfig $config
-   *   Config.
-   *
-   * @return ApsisoneService
-   *   ApisonsService object.
-   *
-   * @todo Fix with a new service.
-   */
-  public static function construct(ClientInterface $httpClient, ImmutableConfig $config) {
-    $service = new static();
-    $service->httpClient = $httpClient;
-    $service->config = $config;
-
-    return $service;
+  protected function requestPost($url, $payload) {
+    return $this->request('post', $url, $payload);
   }
 
-  /**
-   * Get config.
-   *
-   * @return \Drupal\Core\Config\ImmutableConfig
-   *   Config.
-   */
-  private function config() {
-    $this->config = \Drupal::config('apsisone.settings');
-    return $this->config;
+  protected function requestGet($url) {
+    return $this->request('get', $url);
   }
 
-  /**
-   * Request the access token.
-   */
-  public function requestToken() {
+  protected function request($method, $url, $payload = []) {
+    $token = $this->fetchToken();
+    $headers = [
+      'Accept' => 'application/json',
+      'Authorization' => 'Bearer ' . $token,
+    ];
+    return $this->rawRequest($method, $url, $headers, $payload);
+  }
+
+  private function getBaseUrl() {
+    // @todo: Make a config.
+    return 'https://api.apsis.one';
+  }
+
+  protected function rawRequest($method, $url, $headers = [], $payload = []) {
     $client = $this->httpClient;
-    $config = $this->config();
+    $data = [
+      'headers' => $headers,
+      'form_params' => $payload,
+    ];
 
-    $client_id = $config->get('client_id');
-    $client_secret = $config->get('client_secret');
+    try {
+      if ($method == 'post') {
+        $response = $client->post($this->getBaseUrl() . $url, $data);
+      }
+      if ($method == 'get') {
+        $response = $client->get($this->getBaseUrl() . $url, $data);
+      }
+    } catch (ClientException $e) {
+      $response = $e->getResponse();
+      $response_body = $response->getBody()->getContents();
+      $this->logger->warning('ClientException in Apsisone request: %message', ['%message' => $response_body]);
+      return ['error_message' => $response_body];
+    }
+    return Json::decode((string) $response->getBody());
+  }
 
+  protected function fetchToken() {
+    // Return token if cached and valied. Otherwise, refresh or create.
+    $token_renewal = $this->state->get('apsisone_token_renewal', 0);
+    if (time() < $token_renewal) {
+      return $this->state->get('apsisone_token', '');
+    }
+    $client_id = $this->config->get('client_id');
+    $client_secret = $this->config->get('client_secret');
     $payload = [
       'grant_type' => 'client_credentials',
       'client_id' => $client_id,
       'client_secret' => $client_secret,
     ];
-    try {
-      $response = $client->post('/oauth/token', ['form_params' => $payload]);
-    }
-    catch (ClientException $e) {
-      $response = $e->getResponse();
-      $response_body = $response->getBody()->getContents();
-      return ['error_message' => $response_body];
-    }
-    $parsed_response = Json::decode((string) $response->getBody());
-
-    return [
-      'access_token' => $parsed_response['access_token'],
-      'expires_in' => $parsed_response['expires_in'],
-    ];
-  }
-
-  /**
-   * Get token.
-   *
-   * @return string
-   *   Token.
-   */
-  public function getToken() {
-    if (!$this->isTokenValid()) {
-      $this->refreshToken();
+    $response = $this->rawRequest('post', '/oauth/token', [], $payload);
+    if (empty($response['access_token'])) {
+      $this->logger->error('Could not fetch token!');
+      return '';
     }
 
-    $token = \Drupal::state()->get('apsisone_token');
-
-    return $token;
-  }
-
-  /**
-   * Set token.
-   *
-   * @param string $token
-   *   Token to set.
-   * @param int $expire
-   *   Expire time.
-   */
-  public function setToken(string $token, int $expire) {
     // Set token renewaltime to 1 hour before it actually expires.
-    $force_token_early_expire = 3600;
-    $token_renewal = time() + $expire - $force_token_early_expire;
+    $token_renewal = time() + $response['expires_in'] - 3600;
 
     // Save token and renewal time.
-    \Drupal::state()->set('apsisone_token', $token);
-    \Drupal::state()->set('apsisone_token_renewal', $token_renewal);
+    $this->state->set('apsisone_token', $response['access_token']);
+    $this->state->set('apsisone_token_renewal', $token_renewal);
+    return $response['access_token'];
   }
 
   /**
    * Refresh token.
    */
   public function refreshToken() {
-    // Get token.
-    $response = $this->requestToken();
-
-    // Set token.
-    if (isset($response['access_token'])) {
-      $this->setToken($response['access_token'], intval($response['expires_in']));
-    }
-    else {
-      \Drupal::messenger()->addMessage('Failed to refresh token', 'error');
-      \Drupal::logger('apsisone')->error($response['error_message']);
-    }
-  }
-
-  /**
-   * Token valdation.
-   *
-   * @return bool
-   *   If token is still valid.
-   */
-  public function isTokenValid() {
-    $token_renewal = \Drupal::state()->get('apsisone_token_renewal');
-
-    if (time() < $token_renewal) {
-      return TRUE;
-    }
-
-    return FALSE;
-  }
-
-  /**
-   * List segments.
-   *
-   * @return array
-   *   Segments.
-   */
-  public function listSegments() {
-    $client = $this->httpClient;
-    try {
-      $token = $this->getToken();
-
-      $response = $client->get('/audience/segments', [
-        'headers' => [
-          'Accept' => 'application/json',
-          'Authorization' => 'Bearer ' . $token,
-        ],
-      ]);
-    }
-    catch (ClientException $e) {
-      $response = $e->getResponse();
-      $response_body = $response->getBody()->getContents();
-      return ['error_message' => $response_body];
-    }
-    // Get the actual access token.
-    $parsed_response = Json::decode((string) $response->getBody());
-    $segments = $parsed_response['items'];
-
-    return ['success' => $segments];
+    $this->state->delete('apsisone_token');
+    $this->state->set('apsisone_token_renewal', 0);
+    $token = $this->fetchToken();
+    return !empty($token);
   }
 
   /**
@@ -201,18 +140,14 @@ class ApsisoneService {
    *   Segments.
    */
   public function getSegments() {
-    $segments = $this->listSegments();
-    $segments_options = [];
-
-    // Prepare and show the selectable segment values.
-    if (isset($segments['success'])) {
-
-      foreach ($segments['success'] as $segment) {
-        $segments_options[$segment['discriminator']] = $segment['name'];
+    $segments = [];
+    $data = $this->requestGet('/audience/segments');
+    if (!empty($data['items'])) {
+      foreach ($data['items'] as $segment) {
+        $segments[$segment['discriminator']] = $segment['name'];
       }
     }
-
-    return $segments_options;
+    return $segments;
   }
 
   /**
@@ -227,9 +162,6 @@ class ApsisoneService {
    *   Segments successful.
    */
   public function evaluateProfile(array $segments, string $profile) {
-    $token = $this->getToken();
-    $client = $this->httpClient;
-
     $payload = [
       'segments' => [],
       'time_zone' => 'Europe/Stockholm',
@@ -240,26 +172,12 @@ class ApsisoneService {
     }
 
     $keyspace_discriminator = 'com.apsis1.keyspaces.integrations.global.cms';
-
-    try {
-      $response = $client->post('/audience/keyspaces/' . $keyspace_discriminator . '/profiles/' . $profile . '/evaluations', [
-        'headers' => [
-          'Accept' => 'application/json',
-          'Authorization' => 'Bearer ' . $token,
-        ],
-        'form_params' => $payload,
-      ]);
+    $response = $this->requestPost('/audience/keyspaces/' . $keyspace_discriminator . '/profiles/' . $profile . '/evaluations', $payload);
+    if (empty($response['matches'])) {
+      return $response;
     }
-    catch (ClientException $e) {
-      $response = $e->getResponse();
-      $response_body = $response->getBody()->getContents();
-      return ['error_message' => $response_body];
-    }
-    // Get the actual response.
-    $parsed_response = Json::decode((string) $response->getBody());
-    $segments = $parsed_response['matches'];
 
-    return ['success' => $segments];
+    return ['success' => $response['matches']];
   }
 
   /**
@@ -274,8 +192,7 @@ class ApsisoneService {
    * @todo Add better descriptions. And better return type.
    */
   public function mergeProfiles(string $profile) {
-    $token = $this->getToken();
-    $client = $this->httpClient;
+    $token = $this->fetchToken();
 
     $keyspace_discriminator = 'com.apsis1.keyspaces.web';
     $keyspace_discriminator_cms = 'com.apsis1.keyspaces.integrations.global.cms';
@@ -295,15 +212,14 @@ class ApsisoneService {
     ];
 
     try {
-      $response = $client->put('/audience/profiles/merges', [
+      $response = $this->httpClient->put($this->getBaseUrl() . '/audience/profiles/merges', [
         'headers' => [
           'Accept' => 'application/json',
           'Authorization' => 'Bearer ' . $token,
         ],
         'form_params' => $payload,
       ]);
-    }
-    catch (ClientException $e) {
+    } catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
 
@@ -316,7 +232,7 @@ class ApsisoneService {
         setcookie("Ely_CMS_vID", $profile, time() + (10 * 365 * 24 * 60 * 60), '/');
         return 'cookieset';
       }
-      \Drupal::logger('apsisone')->error($response_body);
+      $this->logger->error($response_body);
       return ['error_message' => $response_body];
     }
 
@@ -333,11 +249,7 @@ class ApsisoneService {
    */
   public function getApsisOneCookie() {
     $cookie = @$_COOKIE['Ely_vID'];
-
-    if (!empty($cookie)) {
-      return $cookie;
-    }
-    return FALSE;
+    return !empty($cookie) ? $cookie : FALSE;
   }
 
   /**
@@ -345,11 +257,7 @@ class ApsisoneService {
    */
   public function getApsisOneCmsCookie() {
     $cookie = @$_COOKIE['Ely_CMS_vID'];
-
-    if (!empty($cookie)) {
-      return $cookie;
-    }
-    return FALSE;
+    return !empty($cookie) ? $cookie : FALSE;
   }
 
 }

@@ -132,8 +132,12 @@ class AdminSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     // Refresh token after client id and client secret has been updated.
-    $apsis = new ApsisoneService();
-    $apsis->refreshToken();
+    $apsis = \Drupal::service('apsisone_service');
+    if(!$apsis->refreshToken()) {
+      $this->messenger()->addError('Failed to refresh token.');
+    } else {
+      $this->messenger->addStatus('New token fetched from ApsisOne.');
+    }
   }
 
 }

@@ -48,51 +48,6 @@ class ApsisoneController extends ControllerBase implements ContainerInjectionInt
   }
 
   /**
-   * Process an Apsis One authentication.
-   */
-  public function token() {
-    $response = $this->apsisoneService->requestToken();
-
-    if (isset($response['access_token'])) {
-      \Drupal::state()->set('apsisone_token', $response['access_token']);
-      return ['#markup' => 'New token generated: ' . $response['access_token']];
-    }
-    else {
-      // If we didn't get a token, temporarily display in UI.
-      \Drupal::messenger()
-        ->addMessage('Failed connecting to Apsis One.', 'error');
-      \Drupal::logger('apsisone')->error($response['error_message']);
-      return $this->redirect('<front>');
-    }
-    return FALSE;
-  }
-
-  /**
-   * Lists Apsis One segments.
-   */
-  public function segments() {
-    $response = $this->apsisoneService->listSegments();
-
-    if (isset($response['success'])) {
-      $output = '<ul>';
-      foreach ($response['success'] as $items) {
-        $output .= '<li>' . $items['name'];
-        $output .= ' : ' . $items['discriminator'] . '</li>';
-      }
-      $output .= '</ul>';
-
-      return ['#markup' => $output];
-    }
-    else {
-      \Drupal::messenger()
-        ->addMessage('Failed connecting to Apsis One.', 'error');
-      \Drupal::logger('apsisone')->error($response['error_message']);
-      return $this->redirect('<front>');
-    }
-    return FALSE;
-  }
-
-  /**
    * Lists Apsis One segments.
    */
   public function evaluate() {
