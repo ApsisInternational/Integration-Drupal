@@ -1,0 +1,13 @@
+condition.plugin.segments:
+  type: condition.plugin
+  label: 'Segments condition'
+  mapping:
+    segments:
+      type: sequence
+      label: 'List of Segments'
+      sequence:
+        type: string
+        label: 'Segment'
+    match:
+      type: string
+      label: 'Match'

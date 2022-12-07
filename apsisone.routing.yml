@@ -46,19 +46,3 @@ entity.segmentation.collection:
     _title: 'Segmentation List'
   requirements:
     _permission: 'administer apsisone'
-
-apsisone.cookie:
-  path: 'apsisone/cookie'
-  defaults:
-    _controller: '\Drupal\apsisone\Controller\ApsisoneController::cookie'
-    _title: 'Show Apsis one user cookie id'
-  requirements:
-    _permission: 'administer apsisone'
-
-apsisone.evaluate:
-  path: 'apsisone/evaluate'
-  defaults:
-    _controller: '\Drupal\apsisone\Controller\ApsisoneController::evaluate'
-    _title: 'Evaluate profile'
-  requirements:
-    _permission: 'administer apsisone'

@@ -7,82 +7,17 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityFormInterface;
-
-Drupal::moduleHandler()
-  ->loadInclude('apsisone', 'php', 'src/ApsisoneFunctions');
-
 use Drupal\apsisone\ApsisoneFunctions;
 
 
-function apsisone_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
-
-  // Turn off caching for segmented blocks if cache disabled
-  if ($build["#block"]->id() !== NULL) {
-    $block_content_info = _apsisone_get_block_content_info($build["#block"]->id());
-    $segmentation_enabled_block_types = ApsisoneFunctions::getConfigEntities('block');
-
-    // Check if custom block type has segmentation enabled
-    if (isset($block_content_info['block_type']) && in_array($block_content_info['block_type'], $segmentation_enabled_block_types)) {
-      // Get cache setting
-      $config = \Drupal::config('apsisone.settings');
-      $cache_enabled = $config->get('cache_enabled');
-
-      // Turn off caching if it is turned off
-      if (!$cache_enabled) {
-        $build['#cache']['max-age'] = 0;
-        $build['#cache']['contexts'] = [];
-        $build['#cache']['tags'] = [];
-      }
-
-      // -- Show/hide blocks depending on segment
-
-      // Instansiate the Apsis One Service
-      $apsis = \Drupal::service('apsisone_service');
-
-      // Get profile
-      $profile = $apsis->getApsisOneCookie();
-
-      // Get CMS profile
-      $profile_cms = $apsis->getApsisOneCmsCookie();
-
-      if (!empty($profile) && $profile !== $profile_cms) {
-        $apsis->mergeProfiles($profile);
-      }
-
-      $id = $block_content_info["block_entity_id"];
-      $type = 'block';
-
-      $existing_segmentation = \Drupal::entityTypeManager()
-        ->getStorage('segmentation')
-        ->loadByProperties(['entity_id' => $id, 'type' => $type]);
-      $existing_segmentation = array_shift($existing_segmentation);
-
-      // If profile does not belong to segment then hide the field from print
-      if (!ApsisoneFunctions::profileBelongsToSegment($existing_segmentation, $apsis, $profile)) {
-        $build['#pre_render'][] = '_apsisone_hide_block_prerender';
-      }
-    }
-  }
-}
-
-
+/**
+ * Implements hook_entity_view_alter().
+ */
 function apsisone_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
 
   // For node entities
   if (isset($build['#entity_type']) && ($build['#entity_type'] == 'node')) {
     $id = $build['#node']->id();
-    $type = 'field';
-  }
-  // For block entities
-  else {
-    if (isset($build['#block_content'])) {
-      $id = $build['#block_content']->id();
-      $type = 'block_field';
-    }
-  }
-
-  // If on the correct types of entities
-  if (isset($id)) {
     $segmentation_enabled_fields = ApsisoneFunctions::getConfigEntities('field_config');
     $segmentation_enabled_paragraphs = ApsisoneFunctions::getConfigEntities('paragraph');
 
@@ -148,7 +83,6 @@ function apsisone_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInte
       }
     }
   }
-
 }
 
 
@@ -159,16 +93,9 @@ function apsisone_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   // If fields on node
   $length = strlen($form_id);
-  if ($start = substr($form_id, 0, 5) == 'node_' && $end = substr($form_id, $length - 5, 5) == '_form') {
+  if (substr($form_id, 0, 5) == 'node_' && substr($form_id, $length - 5, 5) == '_form') {
     $entity_type = 'node';
     $type = 'node_type';
-  }
-  // If fields on block
-  else {
-    if (substr($form_id, 0, 14) == 'block_content_' && strpos($_SERVER['REQUEST_URI'], '/block/') !== FALSE) {
-      $entity_type = 'block';
-      $type = 'block_content_type';
-    }
   }
 
   // If dealing with fields and paragraphs on nodes or blocks
@@ -263,68 +190,6 @@ function apsisone_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       }
     }
   }
-  // If dealing with blocks
-  else {
-    if ($form_id == 'block_form' && strpos($_SERVER['REQUEST_URI'], '/block/manage/') !== FALSE) {
-      $segment_type = 'block';
-
-      // Block machine name
-      $block_id = $form['id']['#default_value'];
-
-      $block_content_info = _apsisone_get_block_content_info($block_id);
-
-      $block_entity_id = '';
-      if (isset($block_content_info['block_entity_id'])) {
-        $block_entity_id = $block_content_info['block_entity_id'];
-      }
-      $block_type = $block_content_info['block_type'];
-
-      // Check if custom block type is enabled for segmentation
-      $enabled_blocks = ApsisoneFunctions::getConfigEntities('block');
-      if (in_array($block_type, $enabled_blocks)) {
-        $apsis = \Drupal::service('apsisone_service');
-        $segments_options = $apsis->getSegments();
-
-        // Prepare and show the selectable segment values
-        if (!empty($segments_options)) {
-          $existing_segments = ApsisoneFunctions::getExistingSegments($block_entity_id, 'block', $segment_type);
-
-          $config = \Drupal::config('apsisone.settings');
-          $view_mode = $config->get('view_mode');
-
-          $type = 'checkboxes';
-          if ($view_mode == 'select') {
-            $type = 'select';
-          }
-
-          // Add them to the form
-          $form['apsis_segment'] = [
-            '#title' => 'Apsis One segmentation',
-            '#type' => $type,
-            '#options' => $segments_options,
-            '#weight' => 2,
-            '#default_value' => $existing_segments['existing'],
-            '#multiple' => TRUE,
-          ];
-
-          $form['apsis_segment_match'] = [
-            '#title' => 'Apsis One match',
-            '#type' => 'select',
-            '#options' => ['all' => 'All', 'any' => 'Any'],
-            '#weight' => 3,
-            '#default_value' => $existing_segments['field_match'],
-          ];
-
-          // Add submit function
-          foreach (array_keys($form['actions']) as $action) {
-            if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
-              $form['actions'][$action]['#submit'][] = 'apsisone_form_submit';
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 
@@ -335,79 +200,44 @@ function apsisone_form_submit(array $form, FormStateInterface $form_state) {
     $id = $form_state->getformObject()->getEntity()->id();
   }
 
-  // If block
-  if (isset($values['apsis_segment'])) {
-    $block_content_info = _apsisone_get_block_content_info($id);
 
-    $segm_values = [
-      'entity_id' => $block_content_info['block_entity_id'],
-      'entity_type' => 'block',
-      'type' => 'block',
-      'segment' => serialize($values['apsis_segment']),
-      'segmented_field' => $id,
-      'segmented_field_delta' => '',
-      'segmented_field_match' => $values['apsis_segment_match'],
-    ];
-
-    // If segment already exists update it instead of creating a duplicate
-    $already_existing_segmentation = \Drupal::entityTypeManager()
-      ->getStorage('segmentation')
-      ->loadByProperties([
-        'entity_id' => $segm_values['entity_id'],
-        'segmented_field' => $segm_values['segmented_field'],
-      ]);
-    if (!empty($already_existing_segmentation)) {
-      $segmentation = array_shift($already_existing_segmentation);
-      $segmentation->segment->value = $segm_values['segment'];
-      $segmentation->segmented_field_match = $segm_values['segmented_field_match'];
-    }
-    else {
-      $segmentation = \Drupal\apsisone\Entity\Segmentation::create($segm_values);
-    }
-
-    $segmentation->save();
+  $segment_type = 'field';
+  $entity_type = 'node';
+  if (isset($values['apsis_block_field'])) {
+    $entity_type = 'block';
   }
-  // Else node
-  else {
 
-    $segment_type = 'field';
-    $entity_type = 'node';
-    if (isset($values['apsis_block_field'])) {
-      $entity_type = 'block';
-    }
+  // Create segment and store it. It might save down 0's if you haven't selected anything but it's a good thing when you deselect a previously segmented field and unsegmenting it.
+  foreach ($values as $field => $value) {
+    if (substr($field, 0, 14) == 'apsis_segment_' && substr($field, -6) != '_match') {
 
-    // Create segment and store it. It might save down 0's if you haven't selected anything but it's a good thing when you deselect a previously segmented field and unsegmenting it.
-    foreach ($values as $field => $value) {
-      if (substr($field, 0, 14) == 'apsis_segment_' && substr($field, -6) != '_match') {
+      $segm_values = [
+        'entity_id' => intval($id),
+        'entity_type' => $entity_type,
+        'type' => $segment_type,
+        'segment' => serialize($value),
+        'segmented_field' => str_replace('apsis_segment_', '', $field),
+        'segmented_field_delta' => '',
+        'segmented_field_match' => $values[$field . '_match'],
+      ];
 
-        $segm_values = [
-          'entity_id' => intval($id),
-          'entity_type' => $entity_type,
-          'type' => $segment_type,
-          'segment' => serialize($value),
-          'segmented_field' => str_replace('apsis_segment_', '', $field),
-          'segmented_field_delta' => '',
-          'segmented_field_match' => $values[$field . '_match'],
-        ];
-
-        // If segment already exists update it instead of creating a duplicate
-        $already_existing_segmentation = \Drupal::entityTypeManager()
-          ->getStorage('segmentation')
-          ->loadByProperties([
-            'entity_id' => $segm_values['entity_id'],
-            'segmented_field' => $segm_values['segmented_field'],
-          ]);
-        if (!empty($already_existing_segmentation)) {
-          $segmentation = array_shift($already_existing_segmentation);
-          $segmentation->segment->value = $segm_values['segment'];
-          $segmentation->segmented_field_match = $segm_values['segmented_field_match'];
-        }
-        else {
-          $segmentation = \Drupal\apsisone\Entity\Segmentation::create($segm_values);
-        }
-
-        $segmentation->save();
+      // If segment already exists update it instead of creating a duplicate
+      $already_existing_segmentation = \Drupal::entityTypeManager()
+        ->getStorage('segmentation')
+        ->loadByProperties([
+          'entity_id' => $segm_values['entity_id'],
+          'segmented_field' => $segm_values['segmented_field'],
+        ]);
+      if (!empty($already_existing_segmentation)) {
+        $segmentation = array_shift($already_existing_segmentation);
+        $segmentation->segment->value = $segm_values['segment'];
+        $segmentation->segmented_field_match = $segm_values['segmented_field_match'];
       }
+      else {
+        $segmentation = \Drupal\apsisone\Entity\Segmentation::create($segm_values);
+      }
+
+      $segmentation->save();
     }
   }
 }
@@ -419,8 +249,6 @@ function apsisone_form_submit(array $form, FormStateInterface $form_state) {
  */
 function _apsisone_get_supported_types() {
   $types = [
-    //    'node' => 'Node',
-    'block' => 'Block',
     'field_config' => 'Field',
   ];
   if (\Drupal::moduleHandler()->moduleExists('paragraphs')) {
@@ -430,33 +258,12 @@ function _apsisone_get_supported_types() {
 }
 
 
-function _apsisone_get_block_content_info($block_id) {
-
-  // Get block config
-  $block_config = \Drupal\block\Entity\Block::load($block_id);
-
-  // Get uuid of the block content
-  $uuid = str_replace('block_content:', '', $block_config->getPluginId());
-
-  // Get the block content
-  $block_content = \Drupal::entityTypeManager()
-    ->getStorage('block_content')
-    ->loadByProperties(['uuid' => $uuid]);
-  $block_content = array_shift($block_content);
-
-  if (empty($block_content)) {
-    return FALSE;
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function apsisone_form_block_form_alter(&$form, FormStateInterface $form_state) {
+  if (isset($form['visibility']['apsisone_segments'])) {
+    // Attach the library for the vertical tab.
+    $form['visibility_tabs']['#attached']['library'][] = 'apsisone/block';
   }
-
-  // To finally get the block entity id (int) not machine name and the block custom type(block type from the block config would only return type 'block')
-  $block_entity_id = $block_content->id->value;
-  $block_type = $block_content->bundle();
-
-  return ['block_entity_id' => $block_entity_id, 'block_type' => $block_type];
-}
-
-function _apsisone_hide_block_prerender(array $build) {
-  $build["#configuration"]["label_display"] = '0';
-  $build['content']['#access'] = FALSE;
-  return $build;
 }

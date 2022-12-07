@@ -1,0 +1,147 @@
+<?php
+
+namespace Drupal\apsisone\Plugin\Condition;
+
+use Drupal\apsisone\ApsisoneService;
+use Drupal\Core\Condition\ConditionPluginBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Provides a 'APSIS One' segments condition.
+ *
+ * @Condition(
+ *   id = "apsisone_segments",
+ *   label = @Translation("APSIS One"),
+ * )
+ */
+class Segments extends ConditionPluginBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * An alias manager to find the alias for the current system path.
+   *
+   * @var \Drupal\apsisone\ApsisoneService
+   */
+  protected $apsisone;
+
+  /**
+   * Constructs a RequestPath condition plugin.
+   *
+   * @param \Drupal\path_alias\AliasManagerInterface $alias_manager
+   *   An alias manager to find the alias for the current system path.
+   * @param \Drupal\Core\Path\PathMatcherInterface $path_matcher
+   *   The path matcher service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Path\CurrentPathStack $current_path
+   *   The current path.
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param array $plugin_definition
+   *   The plugin implementation definition.
+   */
+  public function __construct(ApsisoneService $apsisone, array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->apsisone = $apsisone;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $container->get('apsisone_service'),
+      $configuration,
+      $plugin_id,
+      $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return [
+        'segments' => [],
+        'match' => 'all',
+      ] + parent::defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $apsis = \Drupal::service('apsisone_service');
+    $segments = $apsis->getSegments();
+    $segmentsbase = [];
+    foreach ($segments as $key => $value) {
+      $segmentsbase[base64_encode($key)] = $value;
+    }
+    $view_mode = $apsis->getViewMode();
+
+    $type = 'checkboxes';
+    if ($view_mode == 'select') {
+      $type = 'select';
+    }
+
+    // Add them to the form
+    $form['segments'] = [
+      '#title' => 'Apsis One segmentation',
+      '#type' => $type,
+      '#options' => $segmentsbase,
+      '#weight' => -10,
+      '#default_value' => $this->configuration['segments'],
+      '#multiple' => TRUE,
+    ];
+
+    $form['match'] = [
+      '#title' => 'Apsis One match',
+      '#type' => 'select',
+      '#options' => ['all' => 'All', 'any' => 'Any'],
+      '#weight' => -5,
+      '#default_value' => $this->configuration['match'],
+    ];
+
+    return parent::buildConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $this->configuration['segments'] = $form_state->getValue('segments');
+    $this->configuration['match'] = $form_state->getValue('match');
+    parent::submitConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary() {
+    return $this->t('APSIS One summary');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function evaluate() {
+    $segments = $this->configuration['segments'];
+    $segments = array_map(function ($a) {
+      return base64_decode($a);
+    }, $segments);
+    return $this->apsisone->evaluateAgainstSegments(array_values($segments), $this->configuration['match']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts() {
+    // @todo : Fix cache context.
+    $contexts = parent::getCacheContexts();
+    $contexts[] = 'url.path';
+    return $contexts;
+  }
+
+}

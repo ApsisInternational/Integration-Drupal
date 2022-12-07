@@ -260,4 +260,42 @@ class ApsisoneService {
     return !empty($cookie) ? $cookie : FALSE;
   }
 
+  public function getViewMode() {
+    return $this->config->get('view_mode');
+  }
+
+  protected function mergeProfilesIfNeeded() {
+    // Get profile
+    $profile = $this->getApsisOneCookie();
+
+    // Get CMS profile
+    $profile_cms = $this->getApsisOneCmsCookie();
+
+    if (!empty($profile) && $profile !== $profile_cms) {
+      $this->mergeProfiles($profile);
+    }
+  }
+
+  public function evaluateAgainstSegments($segments, $match = 'all') {
+    // @todo Caching?
+    \Drupal::service('page_cache_kill_switch')->trigger();
+
+    $this->mergeProfilesIfNeeded();
+    $profile = $this->getApsisOneCookie();
+    $evaluate = $this->evaluateProfile($segments, $profile);
+
+    if (isset($evaluate["success"]["segments"])) {
+      // One segments returned true
+      if ($match == 'any' && in_array(TRUE, $evaluate["success"]["segments"])) {
+        return TRUE;
+      }
+      // All segments returned true.
+      if ($match == 'all' && !in_array(FALSE, $evaluate["success"]["segments"])) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+
+  }
+
 }

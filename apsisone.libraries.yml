@@ -4,3 +4,8 @@ tracking:
   dependencies:
     - core/drupalSettings
 
+block:
+  js:
+    js/condition.js: {}
+  dependencies:
+    - 'block/drupal.block'

@@ -1,8 +1,6 @@
-name: 'Apsis One'
-description: 'Integration to the Apsis One service for segmented content.'
+name: 'APSIS One'
+description: 'Integration to the APSIS One service for segmented content.'
 package: Apsis One
-core_version_requirement: ^8.8 || ^9 || ^10
+core_version_requirement: ^9 || ^10
 type: module
 configure: apsisone.admin_settings_form
-dependencies:
-  - drupal:block_content
