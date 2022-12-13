@@ -1,6 +1,6 @@
 /**
  * @file
- * Sets up the summary for Apsis one on vertical tabs of block forms.
+ * Sets up the summary for APSIS One on vertical tabs of block forms.
  */
 
 (function ($, Drupal) {

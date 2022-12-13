@@ -4,13 +4,14 @@ namespace Drupal\apsisone;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\State\StateInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use Psr\Log\LoggerInterface;
 
 /**
- * Apsis One Service.
+ * APSIS One Service.
  */
 class ApsisoneService {
 
@@ -24,21 +25,23 @@ class ApsisoneService {
   /**
    * The config factory.
    *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * @var \Drupal\Core\Config\ImmutableConfig
    */
-  protected $config;
+  protected ImmutableConfig $config;
 
   /**
    * Logger instance.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
+   * State.
+   *
    * @var \Drupal\Core\State\StateInterface
    */
-  protected $state;
+  protected StateInterface $state;
 
   /**
    * Class constructor.
@@ -50,15 +53,22 @@ class ApsisoneService {
     $this->state = $state;
   }
 
-  protected function requestPost($url, $payload) {
-    return $this->request('post', $url, $payload);
-  }
-
-  protected function requestGet($url) {
-    return $this->request('get', $url);
-  }
-
-  protected function request($method, $url, $payload = []) {
+  /**
+   * Makes request to APSIS One.
+   *
+   * Fetching valid token before request.
+   *
+   * @param string $method
+   *   Method for call.
+   * @param string $url
+   *   Url to endpoint, excluding domain.
+   * @param array $payload
+   *   Payload array for post requests.
+   *
+   * @return array
+   *   Response data.
+   */
+  protected function request(string $method, string $url, array $payload = []): array {
     $token = $this->fetchToken();
     $headers = [
       'Accept' => 'application/json',
@@ -67,18 +77,40 @@ class ApsisoneService {
     return $this->rawRequest($method, $url, $headers, $payload);
   }
 
+  /**
+   * Get APSIS One protocol and domain for API call.
+   *
+   * @return string
+   *   Base url.
+   */
   private function getBaseUrl() {
-    // @todo: Make a config.
+    // @todo Make a config.
     return 'https://api.apsis.one';
   }
 
-  protected function rawRequest($method, $url, $headers = [], $payload = []) {
+  /**
+   * Makes raw request to APIS One endpoint.
+   *
+   * @param string $method
+   *   Method for call.
+   * @param string $url
+   *   Url to endpoint, excluding domain.
+   * @param array $headers
+   *   Array of headers to send.
+   * @param array $payload
+   *   Payload array for post requests.
+   *
+   * @return array
+   *   Response data.
+   */
+  protected function rawRequest(string $method, string $url, array $headers = [], array $payload = []): array {
     $client = $this->httpClient;
     $data = [
       'headers' => $headers,
       'form_params' => $payload,
     ];
 
+    $response = '';
     try {
       if ($method == 'post') {
         $response = $client->post($this->getBaseUrl() . $url, $data);
@@ -86,10 +118,11 @@ class ApsisoneService {
       if ($method == 'get') {
         $response = $client->get($this->getBaseUrl() . $url, $data);
       }
-    } catch (ClientException $e) {
+    }
+    catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
-      $this->logger->warning('ClientException in Apsisone request: %url => %message', [
+      $this->logger->warning('ClientException in APSIS One request: %url => %message', [
         '%url' => $url,
         '%message' => $response_body,
       ]);
@@ -98,7 +131,13 @@ class ApsisoneService {
     return Json::decode((string) $response->getBody());
   }
 
-  protected function fetchToken() {
+  /**
+   * Fetch new token from APSIS One if needed.
+   *
+   * @return string
+   *   Token to use. Empty string if not successfully.
+   */
+  protected function fetchToken(): string {
     // Return token if cached and valied. Otherwise, refresh or create.
     $token_renewal = $this->state->get('apsisone_token_renewal', 0);
     if (time() < $token_renewal) {
@@ -127,9 +166,12 @@ class ApsisoneService {
   }
 
   /**
-   * Refresh token.
+   * Refreshes token.
+   *
+   * @return bool
+   *   If refresh of token was successfully.
    */
-  public function refreshToken() {
+  public function refreshToken(): bool {
     $this->state->delete('apsisone_token');
     $this->state->set('apsisone_token_renewal', 0);
     $token = $this->fetchToken();
@@ -142,9 +184,9 @@ class ApsisoneService {
    * @return array
    *   Segments.
    */
-  public function getSegments() {
+  public function getSegments(): array {
     $segments = [];
-    $data = $this->requestGet('/audience/segments');
+    $data = $this->request('get', '/audience/segments');
     if (!empty($data['items'])) {
       foreach ($data['items'] as $segment) {
         $segments[$segment['discriminator']] = $segment['name'];
@@ -164,7 +206,7 @@ class ApsisoneService {
    * @return array
    *   Segments successful.
    */
-  public function evaluateProfile(array $segments, string $profile) {
+  public function evaluateProfile(array $segments, string $profile): array {
     if (empty($profile)) {
       return [];
     }
@@ -178,7 +220,7 @@ class ApsisoneService {
     }
 
     $keyspace_discriminator = 'com.apsis1.keyspaces.integrations.global.cms';
-    $response = $this->requestPost('/audience/keyspaces/' . $keyspace_discriminator . '/profiles/' . $profile . '/evaluations', $payload);
+    $response = $this->request('post', '/audience/keyspaces/' . $keyspace_discriminator . '/profiles/' . $profile . '/evaluations', $payload);
     if (empty($response['matches'])) {
       return $response;
     }
@@ -225,7 +267,8 @@ class ApsisoneService {
         ],
         'form_params' => $payload,
       ]);
-    } catch (ClientException $e) {
+    }
+    catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
 
@@ -266,15 +309,14 @@ class ApsisoneService {
     return !empty($cookie) ? $cookie : FALSE;
   }
 
-  public function getViewMode() {
-    return $this->config->get('view_mode');
-  }
-
+  /**
+   * Merge profiles if its needed.
+   */
   protected function mergeProfilesIfNeeded() {
-    // Get profile
+    // Get profile.
     $profile = $this->getApsisOneCookie();
 
-    // Get CMS profile
+    // Get CMS profile.
     $profile_cms = $this->getApsisOneCmsCookie();
 
     if (!empty($profile) && $profile !== $profile_cms) {
@@ -282,13 +324,24 @@ class ApsisoneService {
     }
   }
 
-  public function evaluateAgainstSegments($segments, $match = 'all') {
+  /**
+   * Check current visitors against segments.
+   *
+   * @param array $segments
+   *   List of segments.
+   * @param string $match
+   *   Match type.
+   *
+   * @return bool
+   *   If visitors matches the segments or not.
+   */
+  public function evaluateAgainstSegments(array $segments, string $match = 'all') {
     $this->mergeProfilesIfNeeded();
     $profile = $this->getApsisOneCookie();
     $evaluate = $this->evaluateProfile($segments, $profile);
 
     if (isset($evaluate["success"]["segments"])) {
-      // One segments returned true
+      // One segments returned true.
       if ($match == 'any' && in_array(TRUE, $evaluate["success"]["segments"])) {
         return TRUE;
       }
@@ -300,9 +353,26 @@ class ApsisoneService {
     return FALSE;
   }
 
-  public function getMaxAge() {
+  /**
+   * Get view mode of segments in admin interface.
+   *
+   * @return string
+   *   View mode for segments. select / checkboxes.
+   */
+  public function getViewMode(): string {
+    $view_mode = $this->config->get('view_mode');
+    return ($view_mode !== NULL) ? $view_mode : 'select';
+  }
+
+  /**
+   * Get max age settings for APSIS One data.
+   *
+   * @return int
+   *   Max age for caching.
+   */
+  public function getMaxAge(): int {
     $max_age = $this->config->get('cache_max_age');
-    return ($max_age !== NULL) ? $max_age : 3600;
+    return ($max_age !== NULL) ? (int) $max_age : 3600;
   }
 
 }

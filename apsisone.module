@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Drupal Module: Apsis One
+ * Drupal Module: APSIS One
  */
 
 use Drupal\Core\Form\FormStateInterface;

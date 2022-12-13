@@ -1,6 +1,6 @@
 name: 'APSIS One'
 description: 'Integration to the APSIS One service for segmented content.'
-package: Apsis One
+package: APSIS One
 core_version_requirement: ^9 || ^10
 type: module
 configure: apsisone.admin_settings_form

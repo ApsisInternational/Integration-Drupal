@@ -8,12 +8,12 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides an apsis one tracking code block.
+ * Provides an APSIS One tracking code block.
  *
  * @Block(
  *   id = "apsisone_tracking_code",
  *   admin_label = @Translation("Tracking code"),
- *   category = @Translation("Apsisone")
+ *   category = @Translation("APSIS One")
  * )
  */
 class TrackingCodeBlock extends BlockBase implements ContainerFactoryPluginInterface {

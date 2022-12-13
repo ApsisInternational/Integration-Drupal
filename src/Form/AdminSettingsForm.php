@@ -2,17 +2,16 @@
 
 namespace Drupal\apsisone\Form;
 
-use Drupal\apsisone\ApsisoneService;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * @file
- * Administration page callbacks for the Apsis One module.
+ * Administration page callbacks for the APSIS One module.
  */
 
 /**
- * Settings form for Apsisone.
+ * Settings form for APSIS One.
  *
  * @package Drupal\apsisone\Form
  */
@@ -45,7 +44,7 @@ class AdminSettingsForm extends ConfigFormBase {
     $form['connection'] = [
       '#type' => 'details',
       '#title' => $this->t('Connection'),
-      '#description' => $this->t('Fill in the form below. You will need your Client ID and Client secret from Apsis One.'),
+      '#description' => $this->t('Fill in the form below. You will need your Client ID and Client secret from APSIS One.'),
       '#open' => TRUE,
     ];
 
@@ -98,14 +97,12 @@ class AdminSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
-    $cache_description = 'Cache configurations for APSIS One conditions checks. Cache is based on visitors APSIS One cookie via CacheContexts cookies:Ely_vID.
-    Visibility conditions depends on logic in segments created in APSIS One, becuase of that pages content will not be updated until manually cache clear or
-    max age on content.';
-
     $form['cache'] = [
       '#type' => 'details',
       '#title' => $this->t('Cache'),
-      '#description' => $this->t($cache_description),
+      '#description' => $this->t('Cache configurations for APSIS One conditions checks. Cache is based on visitors APSIS One cookie via CacheContexts cookies:Ely_vID.
+    Visibility conditions depends on logic in segments created in APSIS One, becuase of that pages content will not be updated until manually cache clear or
+    max age on content.'),
       '#open' => TRUE,
     ];
 
@@ -154,7 +151,7 @@ class AdminSettingsForm extends ConfigFormBase {
       $this->messenger()->addError('Failed to refresh token.');
     }
     else {
-      $this->messenger->addStatus('New token fetched from ApsisOne.');
+      $this->messenger->addStatus('New token fetched from APSIS One.');
     }
   }
 

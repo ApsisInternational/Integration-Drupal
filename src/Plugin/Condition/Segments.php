@@ -26,16 +26,10 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
   protected $apsisone;
 
   /**
-   * Constructs a RequestPath condition plugin.
+   * Constructs a condition plugin.
    *
-   * @param \Drupal\path_alias\AliasManagerInterface $alias_manager
-   *   An alias manager to find the alias for the current system path.
-   * @param \Drupal\Core\Path\PathMatcherInterface $path_matcher
-   *   The path matcher service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\Core\Path\CurrentPathStack $current_path
-   *   The current path.
+   * @param \Drupal\apsisone\ApsisoneService $apsisone
+   *   APSIS One service.
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
@@ -63,10 +57,11 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return [
-        'segments' => [],
-        'match' => 'all',
-      ] + parent::defaultConfiguration();
+    $default_values = [
+      'segments' => [],
+      'match' => 'all',
+    ];
+    return $default_values + parent::defaultConfiguration();
   }
 
   /**
@@ -86,9 +81,9 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
       $type = 'select';
     }
 
-    // Add them to the form
+    // Add them to the form.
     $form['segments'] = [
-      '#title' => 'Apsis One segmentation',
+      '#title' => 'APSIS One segmentations',
       '#type' => $type,
       '#options' => $segmentsbase,
       '#weight' => -10,
@@ -97,7 +92,7 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
     ];
 
     $form['match'] = [
-      '#title' => 'Apsis One match',
+      '#title' => 'APSIS One match',
       '#type' => 'select',
       '#options' => ['all' => 'All', 'any' => 'Any'],
       '#weight' => -5,

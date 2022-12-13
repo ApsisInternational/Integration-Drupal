@@ -26,19 +26,13 @@ class Segments extends FieldFormatterConditionBase implements ContainerFactoryPl
    *
    * @var \Drupal\apsisone\ApsisoneService
    */
-  protected $apsisone;
+  protected ApsisoneService $apsisone;
 
   /**
-   * Constructs a RequestPath condition plugin.
+   * Constructs a FieldFormatterCondition plugin.
    *
-   * @param \Drupal\path_alias\AliasManagerInterface $alias_manager
-   *   An alias manager to find the alias for the current system path.
-   * @param \Drupal\Core\Path\PathMatcherInterface $path_matcher
-   *   The path matcher service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\Core\Path\CurrentPathStack $current_path
-   *   The current path.
+   * @param \Drupal\apsisone\ApsisoneService $apsisone
+   *   APSIS One service.
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
@@ -62,7 +56,6 @@ class Segments extends FieldFormatterConditionBase implements ContainerFactoryPl
       $plugin_definition);
   }
 
-
   /**
    * {@inheritdoc}
    */
@@ -80,9 +73,9 @@ class Segments extends FieldFormatterConditionBase implements ContainerFactoryPl
       $type = 'select';
     }
 
-    // Add them to the form
+    // Add them to the form.
     $form['segments'] = [
-      '#title' => 'Apsis One segmentation',
+      '#title' => 'APSIS One segmentations',
       '#type' => $type,
       '#options' => $segmentsbase,
       '#weight' => -10,
@@ -91,7 +84,7 @@ class Segments extends FieldFormatterConditionBase implements ContainerFactoryPl
     ];
 
     $form['match'] = [
-      '#title' => 'Apsis One match',
+      '#title' => 'APSIS One match',
       '#type' => 'select',
       '#options' => ['all' => 'All', 'any' => 'Any'],
       '#weight' => -5,
@@ -106,15 +99,11 @@ class Segments extends FieldFormatterConditionBase implements ContainerFactoryPl
     $build['#cache']['max-age'] = $this->apsisone->getMaxAge();
     $build['#cache']['contexts'][] = 'cookies:Ely_vID';
 
-    \Drupal::logger('apsisone')->debug('Evaluate');
-
-
     $segments = $settings['settings']['segments'];
     $segments = array_map(function ($a) {
       return base64_decode($a);
     }, $segments);
     $build[$field]['#access'] = $this->apsisone->evaluateAgainstSegments($segments, $settings['settings']['match']);
-
   }
 
   /**
@@ -122,7 +111,6 @@ class Segments extends FieldFormatterConditionBase implements ContainerFactoryPl
    */
   public function summary($settings) {
     return t("Condition: APSIS One segments");
-
   }
 
 }
