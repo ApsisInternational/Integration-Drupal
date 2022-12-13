@@ -1,5 +1,0 @@
-entity.apsisone_config.add_form:
-  route_name: 'entity.apsisone_config.add_form'
-  title: 'Add Apsis One Config'
-  appears_on:
-    - entity.apsisone_config.collection

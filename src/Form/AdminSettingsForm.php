@@ -118,7 +118,7 @@ class AdminSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Max age'),
       '#type' => 'textfield',
       '#default_value' => $maxage,
-      '#description' => $this->t('Max age for caches of conditions checks. Default 3600, 0 for no cache and -1 for permanent cache.'),
+      '#description' => $this->t('Max age for caches of conditions checks. Default 3600 seconds, 0 for no cache and -1 for permanent cache.'),
       '#required' => TRUE,
     ];
 

@@ -3,15 +3,3 @@ apsisone.settings:
   parent: system.admin_config_services
   description: 'Configure Apsis One settings.'
   route_name: apsisone.admin_settings_form
-
-entity.apsisone_config.collection:
-  title: 'Configurations'
-  parent: apsisone.settings
-  description: 'Configure Apsis One configurations'
-  route_name: entity.apsisone_config.collection
-
-entity.segmentation.collection:
-  title: 'Segmentation: Listing'
-  route_name: entity.segmentation.collection
-  description: 'List Segmentation entities'
-  weight: 10
