@@ -98,19 +98,36 @@ class AdminSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $cache_description = 'Cache configurations for APSIS One conditions checks. Cache is based on visitors APSIS One cookie via CacheContexts cookies:Ely_vID.
+    Visibility conditions depends on logic in segments created in APSIS One, becuase of that pages content will not be updated until manually cache clear or
+    max age on content.';
+
     $form['cache'] = [
       '#type' => 'details',
       '#title' => $this->t('Cache'),
-      '#description' => $this->t('Cache configurations'),
+      '#description' => $this->t($cache_description),
       '#open' => TRUE,
     ];
 
-    $form['cache']['cache_enabled'] = [
-      '#title' => $this->t('Use cache'),
-      '#type' => 'checkbox',
-      '#default_value' => $config->get('cache_enabled'),
-      '#description' => $this->t('Use caching for nodes that has segmented content'),
+    $maxage = $config->get('cache_max_age');
+    if ($maxage == NULL) {
+      $maxage = 3600;
+    }
+
+    $form['cache']['cache_max_age'] = [
+      '#title' => $this->t('Max age'),
+      '#type' => 'textfield',
+      '#default_value' => $maxage,
+      '#description' => $this->t('Max age for caches of conditions checks. Default 3600, 0 for no cache and -1 for permanent cache.'),
+      '#required' => TRUE,
     ];
+
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('page_cache')) {
+      $form['cache']['page_cache'] = [
+        '#markup' => '<p><strong>' . $this->t('Warning! "Internal Page Cache" module enabled. This will break caching for anonymous users, as it does not respect CookiesCacheContext!') . '</strong></p>',
+      ];
+    }
 
     return parent::buildForm($form, $form_state);
   }
@@ -125,7 +142,7 @@ class AdminSettingsForm extends ConfigFormBase {
       ->set('client_secret', $form_state->getValue('client_secret'))
       ->set('tracking_code', $form_state->getValue('tracking_code'))
       ->set('view_mode', $form_state->getValue('view_mode'))
-      ->set('cache_enabled', $form_state->getValue('cache_enabled'))
+      ->set('cache_max_age', $form_state->getValue('cache_max_age'))
       ->save();
 
     // Set values in variables.
@@ -133,9 +150,10 @@ class AdminSettingsForm extends ConfigFormBase {
 
     // Refresh token after client id and client secret has been updated.
     $apsis = \Drupal::service('apsisone_service');
-    if(!$apsis->refreshToken()) {
+    if (!$apsis->refreshToken()) {
       $this->messenger()->addError('Failed to refresh token.');
-    } else {
+    }
+    else {
       $this->messenger->addStatus('New token fetched from ApsisOne.');
     }
   }

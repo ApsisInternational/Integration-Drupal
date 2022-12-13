@@ -1,22 +1,25 @@
 <?php
 
-namespace Drupal\apsisone\Plugin\Condition;
+namespace Drupal\apsisone\Plugin\Field\FieldFormatter\Condition;
 
 use Drupal\apsisone\ApsisoneService;
-use Drupal\Core\Condition\ConditionPluginBase;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\fico\Plugin\FieldFormatterConditionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a 'APSIS One' segments condition.
+ * Description for your plugin.
  *
- * @Condition(
+ * @FieldFormatterCondition(
  *   id = "apsisone_segments",
- *   label = @Translation("APSIS One"),
+ *   label = @Translation("APSIS One segments"),
+ *   dsFields = TRUE,
+ *   types = {
+ *     "all"
+ *   }
  * )
  */
-class Segments extends ConditionPluginBase implements ContainerFactoryPluginInterface {
+class Segments extends FieldFormatterConditionBase implements ContainerFactoryPluginInterface {
 
   /**
    * An alias manager to find the alias for the current system path.
@@ -59,20 +62,11 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
       $plugin_definition);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function defaultConfiguration() {
-    return [
-        'segments' => [],
-        'match' => 'all',
-      ] + parent::defaultConfiguration();
-  }
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function alterForm(&$form, $settings) {
     $apsis = \Drupal::service('apsisone_service');
     $segments = $apsis->getSegments();
     $segmentsbase = [];
@@ -92,7 +86,7 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
       '#type' => $type,
       '#options' => $segmentsbase,
       '#weight' => -10,
-      '#default_value' => $this->configuration['segments'],
+      '#default_value' => $settings['settings']['segments'],
       '#multiple' => TRUE,
     ];
 
@@ -101,62 +95,34 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
       '#type' => 'select',
       '#options' => ['all' => 'All', 'any' => 'Any'],
       '#weight' => -5,
-      '#default_value' => $this->configuration['match'],
+      '#default_value' => $settings['settings']['match'],
     ];
-
-    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $this->configuration['segments'] = $form_state->getValue('segments');
-    $this->configuration['match'] = $form_state->getValue('match');
-    parent::submitConfigurationForm($form, $form_state);
-  }
+  public function access(&$build, $field, $settings) {
+    $build['#cache']['max-age'] = $this->apsisone->getMaxAge();
+    $build['#cache']['contexts'][] = 'cookies:Ely_vID';
 
-  /**
-   * {@inheritdoc}
-   */
-  public function summary() {
-    return $this->t('APSIS One summary');
-  }
+    \Drupal::logger('apsisone')->debug('Evaluate');
 
-  /**
-   * {@inheritdoc}
-   */
-  public function evaluate() {
-    $segments = $this->configuration['segments'];
+
+    $segments = $settings['settings']['segments'];
     $segments = array_map(function ($a) {
       return base64_decode($a);
     }, $segments);
-    return $this->apsisone->evaluateAgainstSegments(array_values($segments), $this->configuration['match']);
+    $build[$field]['#access'] = $this->apsisone->evaluateAgainstSegments($segments, $settings['settings']['match']);
+
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCacheContexts() {
-    $contexts = parent::getCacheContexts();
-    $contexts[] = 'cookies:Ely_vID';
-    return $contexts;
-  }
+  public function summary($settings) {
+    return t("Condition: APSIS One segments");
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheTags() {
-    $segments = $this->configuration['segments'];
-    $tags = ['apsisone:' . $this->configuration['match'] . ':' . implode('-', $segments)];
-    return $tags;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheMaxAge() {
-    return $this->apsisone->getMaxAge();
   }
 
 }

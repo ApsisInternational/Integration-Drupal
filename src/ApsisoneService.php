@@ -89,7 +89,10 @@ class ApsisoneService {
     } catch (ClientException $e) {
       $response = $e->getResponse();
       $response_body = $response->getBody()->getContents();
-      $this->logger->warning('ClientException in Apsisone request: %message', ['%message' => $response_body]);
+      $this->logger->warning('ClientException in Apsisone request: %url => %message', [
+        '%url' => $url,
+        '%message' => $response_body,
+      ]);
       return ['error_message' => $response_body];
     }
     return Json::decode((string) $response->getBody());
@@ -162,6 +165,9 @@ class ApsisoneService {
    *   Segments successful.
    */
   public function evaluateProfile(array $segments, string $profile) {
+    if (empty($profile)) {
+      return [];
+    }
     $payload = [
       'segments' => [],
       'time_zone' => 'Europe/Stockholm',
@@ -277,9 +283,6 @@ class ApsisoneService {
   }
 
   public function evaluateAgainstSegments($segments, $match = 'all') {
-    // @todo Caching?
-    \Drupal::service('page_cache_kill_switch')->trigger();
-
     $this->mergeProfilesIfNeeded();
     $profile = $this->getApsisOneCookie();
     $evaluate = $this->evaluateProfile($segments, $profile);
@@ -295,7 +298,11 @@ class ApsisoneService {
       }
     }
     return FALSE;
+  }
 
+  public function getMaxAge() {
+    $max_age = $this->config->get('cache_max_age');
+    return ($max_age !== NULL) ? $max_age : 3600;
   }
 
 }

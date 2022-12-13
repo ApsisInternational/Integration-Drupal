@@ -49,23 +49,23 @@ function apsisone_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInte
         $apsis->mergeProfiles($profile);
       }
 
-      // Get cache setting
-      $config = \Drupal::config('apsisone.settings');
-      $cache_enabled = $config->get('cache_enabled');
-
-      // Make sure cache is only turned off or checked for once
-      $cache_check = TRUE;
+//      // Get cache setting
+//      $config = \Drupal::config('apsisone.settings');
+//      $cache_enabled = $config->get('cache_enabled');
+//
+//      // Make sure cache is only turned off or checked for once
+//      $cache_check = TRUE;
 
       foreach ($segmentation_enabled_fields as $enabled_field) {
 
         // Check that we have the enabled field
         if (isset($build[$enabled_field])) {
 
-          // Turn off caching if it is turned off
-          if ($cache_check && !$cache_enabled) {
-            \Drupal::service('page_cache_kill_switch')->trigger();
-            $cache_check = FALSE;
-          }
+//          // Turn off caching if it is turned off
+//          if ($cache_check && !$cache_enabled) {
+//            \Drupal::service('page_cache_kill_switch')->trigger();
+//            $cache_check = FALSE;
+//          }
 
           $existing_segmentation = \Drupal::entityTypeManager()
             ->getStorage('segmentation')
