@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\apsisone\Unit;
 
-use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\State\StateInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\apsisone\ApsisoneService;
@@ -18,32 +17,15 @@ use GuzzleHttp\Psr7\Response;
 class ApsisoneServiceTest extends UnitTestCase {
 
   /**
-   * Container Builder.
-   *
-   * @var \Drupal\Core\DependencyInjection\ContainerBuilder
-   */
-  protected $container;
-
-  /**
    * Apsisone Service.
    *
    * @var \Drupal\apsisone\ApsisoneService
    */
-  protected $apsisoneService;
+  protected ApsisoneService $apsisoneService;
 
-  /**
-   * Mock Handler .
-   *
-   * @var \GuzzleHttp\Handler\MockHandler
-   */
-  protected $mockHandler;
+  protected MockHandler $mockHandler;
 
-  /**
-   * State Interface.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
+  protected StateInterface $state;
 
   /**
    * {@inheritdoc}
@@ -51,116 +33,117 @@ class ApsisoneServiceTest extends UnitTestCase {
   public function setUp(): void {
     parent::setUp();
 
-    $this->mockHandler = new MockHandler();
+    $this->mockHandler = new MockHandler([]);
     $handlerStack = HandlerStack::create($this->mockHandler);
-    $httpClient = new Client(['handler' => $handlerStack]);
+    $client = new Client(['handler' => $handlerStack]);
 
     $configFactory = $this->getConfigFactoryStub([
       'apsisone.settings' => [
         'client_id' => '1234',
         'client_secret' => '4321',
+        'cache_max_age' => '3600',
+        'view_mode' => 'select',
       ],
     ]);
-    // @todo Replace with container mock?
-    $config = $configFactory->get('apsisone.settings');
 
-    $this->apsisoneService = ApsisoneService::construct($httpClient, $config);
-
-    $this->container = new ContainerBuilder();
-    \Drupal::setContainer($this->container);
-
-    $states = [
-      'apsisone_token' => NULL,
-      'apsisone_token_renewal' => 0,
-    ];
-
+    $loggerFactory = $this->getMockBuilder('Psr\Log\LoggerInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->state = $this->createMock(StateInterface::class);
-    $this->state->method('get')->willReturnCallback(
-      function ($key, $default = NULL) use (&$states) {
-        return $states[$key] ?? $default;
-      }
-    );
-    $this->state->method('set')->willReturnCallback(
-      function ($key, $value) use (&$states) {
-        $states[$key] = $value;
-      }
-    );
-    $this->container->set('state', $this->state);
+
+    $this->apsisoneService = new ApsisoneService($client, $configFactory, $loggerFactory, $this->state);
   }
 
   /**
-   * @covers ::getApsisOneCookie
+   * @covers \Drupal\apsisone\ApsisoneService::getApsisOneCookie
+   * @covers \Drupal\apsisone\ApsisoneService::getApsisOneCmsCookie
    */
-  public function testGetCookie() {
+  public function testCookies() {
     $cookie = $this->apsisoneService->getApsisOneCookie();
     $this->assertEquals(FALSE, $cookie);
+    $_COOKIE['Ely_vID'] = '123';
+    $cookie = $this->apsisoneService->getApsisOneCookie();
+    $this->assertEquals('123', $cookie);
+
+    $cookie = $this->apsisoneService->getApsisOneCmsCookie();
+    $this->assertEquals(FALSE, $cookie);
+    $_COOKIE['Ely_CMS_vID'] = '123';
+    $cookie = $this->apsisoneService->getApsisOneCmsCookie();
+    $this->assertEquals('123', $cookie);
   }
 
   /**
-   * @covers ::getToken
+   * @covers \Drupal\apsisone\ApsisoneService::getMaxAge
    */
-  public function testGetToken() {
-//    $this->mockHandler->append(
-//      new Response(200, [], json_encode([
-//        'access_token' => 'asdf',
-//        'expires_in' => 'qwer',
-//      ])),
-//    );
-//
-//    $token = $this->apsisoneService->getToken();
-//
-//    $this->assertEquals('asdf', $token);
+  public function testGetMaxAge() {
+    $maxage = $this->apsisoneService->getMaxAge();
+    $this->assertEquals(3600, $maxage);
   }
 
   /**
-   * @covers ::listSegments
+   * @covers \Drupal\apsisone\ApsisoneService::getViewMode
    */
-  public function testListSegments() {
-//    $this->mockHandler->append(
-//      new Response(200, [], json_encode([
-//        'access_token' => 'asdf',
-//        'expires_in' => 'qwer',
-//      ])),
-//    );
-//    $this->mockHandler->append(
-//      new Response(200, [], json_encode([
-//        'items' => ['asdf'],
-//      ])),
-//    );
-//
-//    $segments = $this->apsisoneService->listSegments();
-//
-//    $this->assertEquals(['success' => ['asdf']], $segments);
+  public function testGetViewMode() {
+    $maxage = $this->apsisoneService->getViewMode();
+    $this->assertEquals('select', $maxage);
   }
 
   /**
-   * @covers ::evaluateProfile
+   * @covers \Drupal\apsisone\ApsisoneService::fetchToken
+   * @covers \Drupal\apsisone\ApsisoneService::refreshToken
    */
-  public function testEvaluateProfile() {
-    $this->mockHandler->append(
-      new Response(200, [], json_encode([
-        'access_token' => 'asdf',
-        'expires_in' => 'qwer',
-      ])),
+  public function testToken() {
+    $this->mockHandler->append(new Response(200, [], json_encode([])));
+    $success = $this->apsisoneService->refreshToken();
+    $this->assertEquals(FALSE, $success);
+
+    $this->mockHandler->append(new Response(200, [], json_encode([
+      'access_token' => '123',
+      'expires_in' => '4560',
+    ])));
+
+    $this->state->expects($this->exactly(3))->method('set')->withConsecutive(
+      ['apsisone_token_renewal', '0'],
+      ['apsisone_token', '123'],
+      ['apsisone_token_renewal', time() + 4560 - 3600],
     );
-    $this->mockHandler->append(
-      new Response(200, [], json_encode([
-        'matches' => ['asdf'],
-      ])),
-    );
-
-    $profile = $this->apsisoneService->evaluateProfile(['asdf'], 'qwer');
-
-    $this->assertEquals(['success' => ['asdf']], $profile);
+    $success = $this->apsisoneService->refreshToken();
+    $this->assertEquals(TRUE, $success);
   }
 
-  /**
-   * @covers ::getApsisOneCookie
-   */
-  public function testGetApsisOneCookie() {
-    $this->assertEquals(FALSE, $this->apsisoneService->getApsisOneCookie());
-    $_COOKIE['Ely_vID'] = 'asdf';
-    $this->assertEquals('asdf', $this->apsisoneService->getApsisOneCookie());
+  public function testSegments() {
+    $this->state->expects($this->any())->method('get')
+      ->will($this->returnValueMap([
+        ['apsisone_token_renewal', 0, time() + 4560],
+        ['apsisone_token', '', '123'],
+      ]));
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "items":[
+      ]
+    }'));
+    $segments = $this->apsisoneService->getSegments();
+    $this->assertEquals([], $segments);
+
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "items":[
+        {
+          "discriminator": "key1",
+          "name": "value1",
+          "description": null,
+           "versions":[]
+        },
+        {
+          "discriminator": "key2",
+          "name": "value2",
+          "description": null,
+           "versions":[]
+        }
+      ]
+    }'));
+    $segments = $this->apsisoneService->getSegments();
+    $this->assertEquals(['key1' => 'value1', 'key2' => 'value2'], $segments);
   }
 
 }

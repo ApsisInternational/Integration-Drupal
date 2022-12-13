@@ -54,6 +54,17 @@ class ApsisoneService {
   }
 
   /**
+   * Get APSIS One protocol and domain for API call.
+   *
+   * @return string
+   *   Base url.
+   */
+  private function getBaseUrl() {
+    // @todo Make a config.
+    return 'https://api.apsis.one';
+  }
+
+  /**
    * Makes request to APSIS One.
    *
    * Fetching valid token before request.
@@ -75,17 +86,6 @@ class ApsisoneService {
       'Authorization' => 'Bearer ' . $token,
     ];
     return $this->rawRequest($method, $url, $headers, $payload);
-  }
-
-  /**
-   * Get APSIS One protocol and domain for API call.
-   *
-   * @return string
-   *   Base url.
-   */
-  private function getBaseUrl() {
-    // @todo Make a config.
-    return 'https://api.apsis.one';
   }
 
   /**
@@ -163,6 +163,21 @@ class ApsisoneService {
     $this->state->set('apsisone_token', $response['access_token']);
     $this->state->set('apsisone_token_renewal', $token_renewal);
     return $response['access_token'];
+  }
+
+  /**
+   * Merge profiles if it's needed.
+   */
+  protected function mergeProfilesIfNeeded() {
+    // Get profile.
+    $profile = $this->getApsisOneCookie();
+
+    // Get CMS profile.
+    $profile_cms = $this->getApsisOneCmsCookie();
+
+    if (!empty($profile) && $profile !== $profile_cms) {
+      $this->mergeProfiles($profile);
+    }
   }
 
   /**
@@ -307,21 +322,6 @@ class ApsisoneService {
   public function getApsisOneCmsCookie() {
     $cookie = @$_COOKIE['Ely_CMS_vID'];
     return !empty($cookie) ? $cookie : FALSE;
-  }
-
-  /**
-   * Merge profiles if its needed.
-   */
-  protected function mergeProfilesIfNeeded() {
-    // Get profile.
-    $profile = $this->getApsisOneCookie();
-
-    // Get CMS profile.
-    $profile_cms = $this->getApsisOneCmsCookie();
-
-    if (!empty($profile) && $profile !== $profile_cms) {
-      $this->mergeProfiles($profile);
-    }
   }
 
   /**
