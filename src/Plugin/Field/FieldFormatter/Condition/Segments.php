@@ -99,11 +99,13 @@ class Segments extends FieldFormatterConditionBase implements ContainerFactoryPl
     $build['#cache']['max-age'] = $this->apsisone->getMaxAge();
     $build['#cache']['contexts'][] = 'cookies:Ely_vID';
 
-    $segments = $settings['settings']['segments'];
-    $segments = array_map(function ($a) {
-      return base64_decode($a);
-    }, $segments);
-    $build[$field]['#access'] = $this->apsisone->evaluateAgainstSegments($segments, $settings['settings']['match']);
+    $segments = [];
+    foreach ($settings['settings']['segments'] as $segment) {
+      if (!empty($segment)) {
+        $segments[] = base64_decode($segment);
+      }
+    }
+    $build[$field]['#access'] = $this->apsisone->evaluateSegmentsWithMatch($segments, $settings['settings']['match']);
   }
 
   /**

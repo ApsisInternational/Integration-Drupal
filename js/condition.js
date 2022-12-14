@@ -4,17 +4,20 @@
  */
 
 (function ($, Drupal) {
-  'use strict';
 
   function checkboxesSummary(context) {
-    var conditionChecked = $(context).find('[data-drupal-selector="edit-visibility-apsisone-segments-segments"] option:checked').length;
-    var negateChecked = $(context).find('[data-drupal-selector="edit-visibility-apsisone-segments-negate"]:checked').length;
+    const conditionChecked = $(context).find(
+      '[data-drupal-selector="edit-visibility-apsisone-segments-segments"] option:checked')
+      .length;
+    const negateChecked = $(context).find(
+      '[data-drupal-selector="edit-visibility-apsisone-segments-negate"]:checked')
+      .length;
 
     if (conditionChecked) {
       if (negateChecked) {
-        return Drupal.t("Hidden for some segments");
+        return Drupal.t('Hidden for some segments');
       }
-      return Drupal.t("Visible for some segments");
+      return Drupal.t('Visible for some segments');
     }
     return Drupal.t('Not restricted');
   }
@@ -31,7 +34,8 @@
     attach: function () {
       if ($.fn.drupalSetSummary !== undefined) {
         // Set the summary on the vertical tab.
-        $('[data-drupal-selector="edit-visibility-apsisone-segments"]').drupalSetSummary(checkboxesSummary);
+        $('[data-drupal-selector="edit-visibility-apsisone-segments"]')
+          .drupalSetSummary(checkboxesSummary);
       }
     }
   };

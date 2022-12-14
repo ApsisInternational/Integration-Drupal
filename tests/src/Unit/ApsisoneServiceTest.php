@@ -23,8 +23,18 @@ class ApsisoneServiceTest extends UnitTestCase {
    */
   protected ApsisoneService $apsisoneService;
 
+  /**
+   * Mock handler for http client traffic.
+   *
+   * @var \GuzzleHttp\Handler\MockHandler
+   */
   protected MockHandler $mockHandler;
 
+  /**
+   * State object for APSIS service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected StateInterface $state;
 
   /**
@@ -52,6 +62,7 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->state = $this->createMock(StateInterface::class);
 
     $this->apsisoneService = new ApsisoneService($client, $configFactory, $loggerFactory, $this->state);
+    unset($_COOKIE['Ely_vID']);
   }
 
   /**
@@ -59,17 +70,11 @@ class ApsisoneServiceTest extends UnitTestCase {
    * @covers \Drupal\apsisone\ApsisoneService::getApsisOneCmsCookie
    */
   public function testCookies() {
-    $cookie = $this->apsisoneService->getApsisOneCookie();
-    $this->assertEquals(FALSE, $cookie);
+    $profile = $this->apsisoneService->getProfile();
+    $this->assertEquals(FALSE, $profile);
     $_COOKIE['Ely_vID'] = '123';
-    $cookie = $this->apsisoneService->getApsisOneCookie();
-    $this->assertEquals('123', $cookie);
-
-    $cookie = $this->apsisoneService->getApsisOneCmsCookie();
-    $this->assertEquals(FALSE, $cookie);
-    $_COOKIE['Ely_CMS_vID'] = '123';
-    $cookie = $this->apsisoneService->getApsisOneCmsCookie();
-    $this->assertEquals('123', $cookie);
+    $profile = $this->apsisoneService->getProfile();
+    $this->assertEquals('123', $profile);
   }
 
   /**
@@ -111,6 +116,9 @@ class ApsisoneServiceTest extends UnitTestCase {
     $this->assertEquals(TRUE, $success);
   }
 
+  /**
+   * @covers \Drupal\apsisone\ApsisoneService::getSegments
+   */
   public function testSegments() {
     $this->state->expects($this->any())->method('get')
       ->will($this->returnValueMap([
@@ -144,6 +152,171 @@ class ApsisoneServiceTest extends UnitTestCase {
     }'));
     $segments = $this->apsisoneService->getSegments();
     $this->assertEquals(['key1' => 'value1', 'key2' => 'value2'], $segments);
+
+    $this->mockHandler->append(new Response(404, [], '
+    {
+      "items":[
+        {
+          "discriminator": "key1",
+          "name": "value1",
+          "description": null,
+           "versions":[]
+        },
+      ]
+    }'));
+    $segments = $this->apsisoneService->getSegments();
+    $this->assertEquals([], $segments);
+  }
+
+  /**
+   * @covers \Drupal\apsisone\ApsisoneService::evaluateSegments
+   */
+  public function testEvaluateSegments() {
+    $segments = $this->apsisoneService->evaluateSegments(['key1']);
+    $this->assertEquals([], $segments);
+
+    $_COOKIE['Ely_vID'] = '123';
+    $this->state->expects($this->any())->method('get')
+      ->will($this->returnValueMap([
+        ['apsisone_token_renewal', 0, time() + 4560],
+        ['apsisone_token', '', '123'],
+      ]));
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "matches":{
+        "segments":{
+          "key1": true,
+          "key2": false
+        }
+      }
+    }
+    '));
+
+    $segments = $this->apsisoneService->evaluateSegments(['key1', 'key2']);
+    $this->assertEquals([
+      'success' => [
+        'segments' => [
+          'key1' => TRUE,
+          'key2' => FALSE,
+        ],
+      ],
+    ], $segments);
+  }
+
+  /**
+   * @covers \Drupal\apsisone\ApsisoneService::evaluateSegmentsWithMatch
+   */
+  public function testEvaluateSegmentsWithMatch() {
+    $_COOKIE['Ely_vID'] = '123';
+    $_COOKIE['Ely_CMS_vID'] = '123';
+    $this->state->expects($this->any())->method('get')
+      ->will($this->returnValueMap([
+        ['apsisone_token_renewal', 0, time() + 4560],
+        ['apsisone_token', '', '123'],
+      ]));
+
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "matches":{
+        "segments":{
+          "key1": true,
+          "key2": true
+        }
+      }
+    }
+    '));
+    $result = $this->apsisoneService->evaluateSegmentsWithMatch([
+      'key1',
+      'key2',
+    ]);
+    $this->assertEquals(TRUE, $result);
+
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "matches":{
+        "segments":{
+          "key1": true,
+          "key2": false
+        }
+      }
+    }
+    '));
+    $result = $this->apsisoneService->evaluateSegmentsWithMatch([
+      'key1',
+      'key2',
+    ]);
+    $this->assertEquals(FALSE, $result);
+
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "matches":{
+        "segments":{
+          "key1": true,
+          "key2": false
+        }
+      }
+    }
+    '));
+    $result = $this->apsisoneService->evaluateSegmentsWithMatch([
+      'key1',
+      'key2',
+    ], 'any');
+    $this->assertEquals(TRUE, $result);
+
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "matches":{
+        "segments":{
+          "key1": false,
+          "key2": false
+        }
+      }
+    }
+    '));
+    $result = $this->apsisoneService->evaluateSegmentsWithMatch([
+      'key1',
+      'key2',
+    ], 'any');
+    $this->assertEquals(FALSE, $result);
+  }
+
+  /**
+   * @covers \Drupal\apsisone\ApsisoneService::mergeProfiles
+   */
+  public function testMergeProfiles() {
+    $_COOKIE['Ely_vID'] = '123';
+    $_COOKIE['Ely_CMS_vID'] = '1234';
+    $this->state->expects($this->any())->method('get')
+      ->will($this->returnValueMap([
+        ['apsisone_token_renewal', 0, time() + 4560],
+        ['apsisone_token', '', '123'],
+      ]));
+
+    $this->mockHandler->append(new Response(200, [], ''));
+
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "matches":{
+        "segments":{
+          "key1": true
+        }
+      }
+    }
+    '));
+    $this->apsisoneService->evaluateSegmentsWithMatch(['key1']);
+
+    $this->mockHandler->append(new Response(400, [], 'error'));
+    $this->mockHandler->append(new Response(200, [], '
+    {
+      "matches":{
+        "segments":{
+          "key1": true
+        }
+      }
+    }
+    '));
+    $this->apsisoneService->evaluateSegmentsWithMatch(['key1']);
+
   }
 
 }

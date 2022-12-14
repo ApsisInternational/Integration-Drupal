@@ -126,7 +126,7 @@ class Segments extends ConditionPluginBase implements ContainerFactoryPluginInte
     $segments = array_map(function ($a) {
       return base64_decode($a);
     }, $segments);
-    return $this->apsisone->evaluateAgainstSegments(array_values($segments), $this->configuration['match']);
+    return $this->apsisone->evaluateSegmentsWithMatch(array_values($segments), $this->configuration['match']);
   }
 
   /**

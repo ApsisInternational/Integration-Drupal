@@ -59,9 +59,25 @@ class ApsisoneService {
    * @return string
    *   Base url.
    */
-  private function getBaseUrl() {
+  protected function getBaseUrl() {
     // @todo Make a config.
     return 'https://api.apsis.one';
+  }
+
+  /**
+   * Get user id from cookie.
+   */
+  protected function getApsisOneCookie() {
+    $cookie = @$_COOKIE['Ely_vID'];
+    return !empty($cookie) ? $cookie : FALSE;
+  }
+
+  /**
+   * Get user id from CMS cookie.
+   */
+  protected function getApsisOneCmsCookie() {
+    $cookie = @$_COOKIE['Ely_CMS_vID'];
+    return !empty($cookie) ? $cookie : FALSE;
   }
 
   /**
@@ -181,69 +197,6 @@ class ApsisoneService {
   }
 
   /**
-   * Refreshes token.
-   *
-   * @return bool
-   *   If refresh of token was successfully.
-   */
-  public function refreshToken(): bool {
-    $this->state->delete('apsisone_token');
-    $this->state->set('apsisone_token_renewal', 0);
-    $token = $this->fetchToken();
-    return !empty($token);
-  }
-
-  /**
-   * Get segments.
-   *
-   * @return array
-   *   Segments.
-   */
-  public function getSegments(): array {
-    $segments = [];
-    $data = $this->request('get', '/audience/segments');
-    if (!empty($data['items'])) {
-      foreach ($data['items'] as $segment) {
-        $segments[$segment['discriminator']] = $segment['name'];
-      }
-    }
-    return $segments;
-  }
-
-  /**
-   * Evaluate Profile.
-   *
-   * @param array $segments
-   *   Segments.
-   * @param string $profile
-   *   Profile.
-   *
-   * @return array
-   *   Segments successful.
-   */
-  public function evaluateProfile(array $segments, string $profile): array {
-    if (empty($profile)) {
-      return [];
-    }
-    $payload = [
-      'segments' => [],
-      'time_zone' => 'Europe/Stockholm',
-    ];
-
-    foreach ($segments as $segment) {
-      $payload['segments'][] = ['discriminator' => $segment];
-    }
-
-    $keyspace_discriminator = 'com.apsis1.keyspaces.integrations.global.cms';
-    $response = $this->request('post', '/audience/keyspaces/' . $keyspace_discriminator . '/profiles/' . $profile . '/evaluations', $payload);
-    if (empty($response['matches'])) {
-      return $response;
-    }
-
-    return ['success' => $response['matches']];
-  }
-
-  /**
    * Merge Profiles.
    *
    * @param string $profile
@@ -254,7 +207,7 @@ class ApsisoneService {
    *
    * @todo Add better descriptions. And better return type.
    */
-  public function mergeProfiles(string $profile) {
+  protected function mergeProfiles(string $profile) {
     $token = $this->fetchToken();
 
     $keyspace_discriminator = 'com.apsis1.keyspaces.web';
@@ -309,23 +262,86 @@ class ApsisoneService {
   }
 
   /**
-   * Get user id from cookie.
+   * Refreshes token.
+   *
+   * @return bool
+   *   If refresh of token was successfully.
    */
-  public function getApsisOneCookie() {
-    $cookie = @$_COOKIE['Ely_vID'];
-    return !empty($cookie) ? $cookie : FALSE;
+  public function refreshToken(): bool {
+    $this->state->delete('apsisone_token');
+    $this->state->set('apsisone_token_renewal', 0);
+    $token = $this->fetchToken();
+    return !empty($token);
   }
 
   /**
-   * Get user id from CMS cookie.
+   * Get segments.
+   *
+   * @return array
+   *   Segments.
    */
-  public function getApsisOneCmsCookie() {
-    $cookie = @$_COOKIE['Ely_CMS_vID'];
-    return !empty($cookie) ? $cookie : FALSE;
+  public function getSegments(): array {
+    $segments = [];
+    $data = $this->request('get', '/audience/segments');
+    if (!empty($data['items'])) {
+      foreach ($data['items'] as $segment) {
+        $segments[$segment['discriminator']] = $segment['name'];
+      }
+    }
+    return $segments;
+  }
+
+  /**
+   * Get visitor profile.
+   *
+   * @return string
+   *   Visitors profile id.
+   */
+  public function getProfile(): string {
+    return $this->getApsisOneCookie();
+  }
+
+  /**
+   * Evaluate Profile.
+   *
+   * @param array $segments
+   *   Segments.
+   * @param string $profile
+   *   Profile.
+   *
+   * @return array
+   *   Segments successful.
+   */
+  public function evaluateSegments(array $segments, string $profile = ''): array {
+    if (empty($profile)) {
+      $profile = $this->getApsisOneCookie();
+      if (empty($profile)) {
+        return [];
+      }
+    }
+
+    $payload = [
+      'segments' => [],
+      'time_zone' => 'Europe/Stockholm',
+    ];
+
+    foreach ($segments as $segment) {
+      $payload['segments'][] = ['discriminator' => $segment];
+    }
+
+    $keyspace_discriminator = 'com.apsis1.keyspaces.integrations.global.cms';
+    $response = $this->request('post', '/audience/keyspaces/' . $keyspace_discriminator . '/profiles/' . $profile . '/evaluations', $payload);
+    if (empty($response['matches'])) {
+      return $response;
+    }
+
+    return ['success' => $response['matches']];
   }
 
   /**
    * Check current visitors against segments.
+   *
+   * Will merge profiles if needed.
    *
    * @param array $segments
    *   List of segments.
@@ -335,10 +351,9 @@ class ApsisoneService {
    * @return bool
    *   If visitors matches the segments or not.
    */
-  public function evaluateAgainstSegments(array $segments, string $match = 'all') {
+  public function evaluateSegmentsWithMatch(array $segments, string $match = 'all') {
     $this->mergeProfilesIfNeeded();
-    $profile = $this->getApsisOneCookie();
-    $evaluate = $this->evaluateProfile($segments, $profile);
+    $evaluate = $this->evaluateSegments($segments);
 
     if (isset($evaluate["success"]["segments"])) {
       // One segments returned true.
