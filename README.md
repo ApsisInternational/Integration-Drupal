@@ -7,7 +7,7 @@ This repository contains the code and resources to integrate APSIS One with Drup
 ## 🚀 Getting Started
 Looking for guidance on how to use this integration?<br />
 👉 Setup guides etc. are available in /Documentation <br />
-👉 [APSIS One knowledge base for CMS Keyspace publication](https://help.apsis.one/en/articles/7902190-cms-publication-is-required)
+👉 [APSIS One knowledge base for Drupal](https://help.apsis.one/en/collections/4025070-drupal)
 
 
 ## 🧪 Want to try APSIS One for Free?
