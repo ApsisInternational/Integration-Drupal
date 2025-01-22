@@ -20,7 +20,7 @@ Apsis One Drupal integration module.
 REQUIREMENTS
 ------------
 Supported versions:
-Drupal 8
+Drupal 9 or 10
 
 Required user roles for installation:
 admin
