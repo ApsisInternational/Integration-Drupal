@@ -97,32 +97,32 @@ Using the evaluateProfile() function you can check if the visitor belongs to seg
  
  MODULE FILES
  ------------
- .github/workflows/workflow.yml
- config/schema/apsisone_config.schema.yml
- src/Controller/ApsisoneConfigListBuilder.php
- src/Controller/ApsisoneController.php
- src/Entity/ApsisoneConfig.php
- src/Entity/Segmentation.php
- src/Form/AdminSettingsForm.php
- src/Form/ApsisoneConfigDeleteForm.php
- src/Form/ApsisoneConfigForm.php
- src/ApsisoneConfigInterface.php
- src/ApsisoneService.php
- src/SegmentationInterface.php
- src/SegmentationListBuilder.php
- tests/src/Unit/Entity/ApsisoneConfigTest.php
- tests/src/Unit/Entity/SegmentationTest.php
- tests/src/Unit/ApsisoneServiceTest.php
- tests/src/Unit/SegmentationListBuilderTest.php
- apsisone.info.yml
- apsisone.links.action.yml
- apsisone.links.menu.yml
- apsisone.module
- apsisone.permissions.yml
- apsisone.routing.yml
- apsisone.services.yml
- phpunit.xml.dist
- README.md
+ - .github/workflows/workflow.yml
+ - config/schema/apsisone_config.schema.yml
+ - src/Controller/ApsisoneConfigListBuilder.php
+ - src/Controller/ApsisoneController.php
+ - src/Entity/ApsisoneConfig.php
+ - src/Entity/Segmentation.php
+ - src/Form/AdminSettingsForm.php
+ - src/Form/ApsisoneConfigDeleteForm.php
+ - src/Form/ApsisoneConfigForm.php
+ - src/ApsisoneConfigInterface.php
+ - src/ApsisoneService.php
+ - src/SegmentationInterface.php
+ - src/SegmentationListBuilder.php
+ - tests/src/Unit/Entity/ApsisoneConfigTest.php
+ - tests/src/Unit/Entity/SegmentationTest.php
+ - tests/src/Unit/ApsisoneServiceTest.php
+ - tests/src/Unit/SegmentationListBuilderTest.php
+ - apsisone.info.yml
+ - apsisone.links.action.yml
+ - apsisone.links.menu.yml
+ - apsisone.module
+ - apsisone.permissions.yml
+ - apsisone.routing.yml
+ - apsisone.services.yml
+ - phpunit.xml.dist
+ - README.md
  
  
   MODULE DATABASE TABLES
